@@ -1,0 +1,67 @@
+# ==========================================
+# InsurEdge Enterprise - Git Ignore Rules
+# ==========================================
+
+# Environment & Secrets (NEVER push credentials or local secrets)
+.env
+.env.local
+.env.*.local
+.env.production
+.env.staging
+!.env.example
+*.key
+*.pem
+*.crt
+*.pfx
+*.keystore
+secrets/
+
+# Docker Local Persistent Data & Volumes
+postgres_data/
+docker_data/
+data/
+db_data/
+pgdata/
+keycloak_data/
+docker-compose.override.yml
+
+# Binaries, Installers, & VS Code Extension Packages
+*.vsix
+*.exe
+*.dll
+*.iso
+*.dmg
+
+# Node & Frontend Build Artifacts
+node_modules/
+dist/
+.angular/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Java & Backend Maven Artifacts
+target/
+build/
+*.class
+*.jar
+*.war
+*.ear
+.gradle/
+
+# IDE & OS Configuration
+.idea/
+*.iml
+*.iws
+.vscode/
+.DS_Store
+Thumbs.db
+desktop.ini
+*.log
+logs/
+
+# Temporary and Scratch Files
+scratch/
+tmp/
+temp/
+make_commits.sh
