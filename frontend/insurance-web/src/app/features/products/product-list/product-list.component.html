@@ -1,0 +1,35 @@
+<div class="products-page">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Insurance Products & Coverages</h1>
+      <p class="page-subtitle">Configure underwriters' plan specifications, base rates, and coverage terms.</p>
+    </div>
+    <div class="header-actions">
+      <app-button variant="primary" routerLink="/products/new">+ Define Product</app-button>
+    </div>
+  </div>
+
+  <div class="products-grid">
+    @for (prod of products(); track prod.id) {
+      <app-card [title]="prod.name" [subtitle]="'Code: ' + prod.code">
+        <div class="product-category-tag">
+          <span class="cat-badge">{{ prod.category }}</span>
+          <app-badge [status]="prod.active ? 'active' : 'inactive'">
+            {{ prod.active ? 'Active' : 'Inactive' }}
+          </app-badge>
+        </div>
+
+        <p class="product-desc">{{ prod.description }}</p>
+
+        <div class="product-pricing">
+          <span class="price-label">Starting Base Premium</span>
+          <span class="price-value">${{ prod.basePremium.toFixed(2) }} <small>/ month</small></span>
+        </div>
+
+        <div class="product-card-footer" card-footer>
+          <app-button variant="outline" size="sm" [routerLink]="['/policies/new']">Issue Policy with Product</app-button>
+        </div>
+      </app-card>
+    }
+  </div>
+</div>

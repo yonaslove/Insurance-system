@@ -1,0 +1,14 @@
+<div class="stat-card">
+  <div class="stat-content">
+    <span class="stat-label">{{ label }}</span>
+    <div class="stat-value">{{ value }}</div>
+    @if (description) {
+      <div class="stat-description">{{ description }}</div>
+    }
+  </div>
+  @if (icon) {
+    <div class="stat-icon" [class]="'icon-' + iconColor">
+      <span class="icon-symbol">{{ icon }}</span>
+    </div>
+  }
+</div>

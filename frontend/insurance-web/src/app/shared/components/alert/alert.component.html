@@ -1,0 +1,21 @@
+<div class="alert" [class]="'alert-' + type">
+  <div class="alert-icon" aria-hidden="true">
+    @switch (type) {
+      @case ('success') { <span>✓</span> }
+      @case ('warning') { <span>⚠️</span> }
+      @case ('danger') { <span>✕</span> }
+      @default { <span>ℹ️</span> }
+    }
+  </div>
+  <div class="alert-content">
+    @if (title) {
+      <div class="alert-title">{{ title }}</div>
+    }
+    <div class="alert-message">
+      <ng-content></ng-content>
+    </div>
+  </div>
+  @if (dismissible) {
+    <button type="button" class="alert-close" (click)="dismiss()" aria-label="Dismiss">✕</button>
+  }
+</div>

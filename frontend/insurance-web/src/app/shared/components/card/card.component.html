@@ -1,0 +1,23 @@
+<div class="card" [class.no-padding]="noPadding">
+  @if (title || headerAction) {
+    <div class="card-header">
+      <div class="header-titles">
+        @if (title) {
+          <h3 class="card-title">{{ title }}</h3>
+        }
+        @if (subtitle) {
+          <p class="card-subtitle">{{ subtitle }}</p>
+        }
+      </div>
+      <div class="header-actions">
+        <ng-content select="[card-action]"></ng-content>
+      </div>
+    </div>
+  }
+  <div class="card-body">
+    <ng-content></ng-content>
+  </div>
+  <div class="card-footer" #footerContent>
+    <ng-content select="[card-footer]"></ng-content>
+  </div>
+</div>

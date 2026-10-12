@@ -1,0 +1,41 @@
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.625rem;
+  border-radius: var(--radius-full);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1;
+}
+
+.badge-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: currentColor;
+}
+
+/* Status variants */
+.badge-active,
+.badge-approved,
+.badge-completed {
+  background-color: var(--color-success-bg);
+  color: var(--color-success);
+}
+
+.badge-pending,
+.badge-submitted,
+.badge-under_review {
+  background-color: var(--color-warning-bg);
+  color: var(--color-warning);
+}
+
+.badge-inactive,
+.badge-rejected,
+.badge-cancelled,
+.badge-expired,
+.badge-failed {
+  background-color: var(--color-danger-bg);
+  color: var(--color-danger);
+}
