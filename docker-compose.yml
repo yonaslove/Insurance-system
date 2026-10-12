@@ -1,0 +1,202 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: insurance-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-insurance_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-insurance_password}
+      POSTGRES_DB: insurancedb
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./infra/postgres/init-databases.sql:/docker-entrypoint-initdb.d/init-databases.sql:ro
+    networks:
+      - insurance-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-insurance_user} -d insurancedb"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:25.0
+    container_name: insurance-keycloak
+    command: start-dev --import-realm
+    environment:
+      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN:-admin}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin}
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak_db
+      KC_DB_USERNAME: ${POSTGRES_USER:-insurance_user}
+      KC_DB_PASSWORD: ${POSTGRES_PASSWORD:-insurance_password}
+      KC_HEALTH_ENABLED: "true"
+    ports:
+      - "8180:8080"
+    volumes:
+      - ./infra/keycloak:/opt/keycloak/data/import:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - insurance-net
+
+  discovery-server:
+    build:
+      context: ./services/discovery-server
+      dockerfile: Dockerfile
+    container_name: insurance-discovery-server
+    ports:
+      - "8761:8761"
+    networks:
+      - insurance-net
+
+  api-gateway:
+    build:
+      context: ./services/api-gateway
+      dockerfile: Dockerfile
+    container_name: insurance-api-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      EUREKA_HOST: discovery-server
+      EUREKA_PORT: 8761
+    depends_on:
+      - discovery-server
+    networks:
+      - insurance-net
+
+  customer-service:
+    build:
+      context: ./services/customer-service
+      dockerfile: Dockerfile
+    container_name: insurance-customer-service
+    ports:
+      - "8081:8081"
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: customer_db
+      POSTGRES_USER: ${POSTGRES_USER:-insurance_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-insurance_password}
+      EUREKA_HOST: discovery-server
+      EUREKA_PORT: 8761
+    depends_on:
+      postgres:
+        condition: service_healthy
+      discovery-server:
+        condition: service_started
+    networks:
+      - insurance-net
+
+  product-service:
+    build:
+      context: ./services/product-service
+      dockerfile: Dockerfile
+    container_name: insurance-product-service
+    ports:
+      - "8082:8082"
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: product_db
+      POSTGRES_USER: ${POSTGRES_USER:-insurance_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-insurance_password}
+      EUREKA_HOST: discovery-server
+      EUREKA_PORT: 8761
+    depends_on:
+      postgres:
+        condition: service_healthy
+      discovery-server:
+        condition: service_started
+    networks:
+      - insurance-net
+
+  policy-service:
+    build:
+      context: ./services/policy-service
+      dockerfile: Dockerfile
+    container_name: insurance-policy-service
+    ports:
+      - "8083:8083"
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: policy_db
+      POSTGRES_USER: ${POSTGRES_USER:-insurance_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-insurance_password}
+      EUREKA_HOST: discovery-server
+      EUREKA_PORT: 8761
+    depends_on:
+      postgres:
+        condition: service_healthy
+      discovery-server:
+        condition: service_started
+    networks:
+      - insurance-net
+
+  claims-service:
+    build:
+      context: ./services/claims-service
+      dockerfile: Dockerfile
+    container_name: insurance-claims-service
+    ports:
+      - "8084:8084"
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: claims_db
+      POSTGRES_USER: ${POSTGRES_USER:-insurance_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-insurance_password}
+      EUREKA_HOST: discovery-server
+      EUREKA_PORT: 8761
+    depends_on:
+      postgres:
+        condition: service_healthy
+      discovery-server:
+        condition: service_started
+    networks:
+      - insurance-net
+
+  payment-service:
+    build:
+      context: ./services/payment-service
+      dockerfile: Dockerfile
+    container_name: insurance-payment-service
+    ports:
+      - "8085:8085"
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: payment_db
+      POSTGRES_USER: ${POSTGRES_USER:-insurance_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-insurance_password}
+      EUREKA_HOST: discovery-server
+      EUREKA_PORT: 8761
+    depends_on:
+      postgres:
+        condition: service_healthy
+      discovery-server:
+        condition: service_started
+    networks:
+      - insurance-net
+
+  insurance-web:
+    build:
+      context: ./frontend/insurance-web
+      dockerfile: Dockerfile
+    container_name: insurance-web
+    ports:
+      - "4200:80"
+    depends_on:
+      - api-gateway
+    networks:
+      - insurance-net
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  insurance-net:
+    driver: bridge
