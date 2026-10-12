@@ -1,0 +1,413 @@
+<div class="register-page">
+  <div class="register-container">
+    
+    @if (submittedSuccess) {
+      <!-- KYC Approval Pending Confirmation Card -->
+      <div class="confirmation-card">
+        <div class="confirmation-icon-wrap">
+          <span class="conf-badge">⏳</span>
+        </div>
+        <div class="conf-header">
+          <div class="brand-badge">InsurEdge Regulatory Compliance & Underwriting</div>
+          <h2>Insurance Application Submitted</h2>
+          <p class="conf-sub">Your personal KYC onboarding profile is currently undergoing verification.</p>
+        </div>
+
+        <div class="app-summary-box">
+          <div class="summary-row">
+            <span class="lbl">Application Reference:</span>
+            <span class="val highlight"><code>{{ registrationRefNumber }}</code></span>
+          </div>
+          <div class="summary-row">
+            <span class="lbl">Applicant Name:</span>
+            <span class="val">{{ registeredCustomerName }}</span>
+          </div>
+          <div class="summary-row">
+            <span class="lbl">Registered Email:</span>
+            <span class="val">{{ form.email }}</span>
+          </div>
+          <div class="summary-row">
+            <span class="lbl">KYC Status:</span>
+            <span class="status-pill status-pending">PENDING APPROVAL</span>
+          </div>
+        </div>
+
+        <div class="approval-workflow-info">
+          <h4>Required Insurance Workflow:</h4>
+          <ol class="workflow-steps">
+            <li>
+              <strong>1. Customer Care & Compliance Review:</strong>
+              <span>An authorized Customer Service Representative or Administrator verifies your ID document ({{ form.idType }} - {{ form.idNumber }}) and residential address.</span>
+            </li>
+            <li>
+              <strong>2. Account Activation:</strong>
+              <span>Upon KYC approval, your account status is changed to <code>ACTIVE</code> in the corporate database.</span>
+            </li>
+            <li>
+              <strong>3. Policy & Claims Unlock:</strong>
+              <span>Once activated, you can request insurance policies, download digital certificates, and submit claims directly through the portal.</span>
+            </li>
+          </ol>
+        </div>
+
+        <div class="conf-actions">
+          <button type="button" class="btn-primary-conf" (click)="goToPortal()">
+            Enter Customer Portal (Track Review Status) &rarr;
+          </button>
+          <a routerLink="/login" class="btn-secondary-link">Return to Portal Sign In</a>
+        </div>
+      </div>
+    } @else {
+      <!-- Multi-Section Professional Insurance Customer Onboarding Form -->
+      <div class="register-header">
+        <div class="brand-badge">🛡️ InsurEdge Policyholder Onboarding & KYC</div>
+        <h1>New Customer Registration</h1>
+        <p>Complete your official insurance profile to apply for coverage, bind policies, and access claims adjudication.</p>
+      </div>
+
+      @if (errorMessage) {
+        <div class="error-alert">
+          <span class="error-icon">⚠️</span>
+          <span>{{ errorMessage }}</span>
+        </div>
+      }
+
+      <form (ngSubmit)="onSubmit()" class="register-form">
+        
+        <!-- SECTION 1: Personal & Legal Identification -->
+        <div class="form-section">
+          <div class="section-title">
+            <span class="sec-icon">🪪</span>
+            <div>
+              <h3>1. Personal Identity & Verification</h3>
+              <p>Legal name and government-issued identification required for regulatory KYC compliance.</p>
+            </div>
+          </div>
+
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="firstName">Legal First Name *</label>
+              <input 
+                id="firstName" 
+                name="firstName" 
+                type="text" 
+                [(ngModel)]="form.firstName" 
+                placeholder="e.g. Alexander" 
+                required 
+                class="form-control" />
+            </div>
+
+            <div class="form-group">
+              <label for="lastName">Legal Last Name *</label>
+              <input 
+                id="lastName" 
+                name="lastName" 
+                type="text" 
+                [(ngModel)]="form.lastName" 
+                placeholder="e.g. Wright" 
+                required 
+                class="form-control" />
+            </div>
+
+            <div class="form-group">
+              <label for="dob">Date of Birth *</label>
+              <input 
+                id="dob" 
+                name="dob" 
+                type="date" 
+                [(ngModel)]="form.dateOfBirth" 
+                required 
+                class="form-control" />
+            </div>
+
+            <div class="form-group">
+              <label for="gender">Gender *</label>
+              <select 
+                id="gender" 
+                name="gender" 
+                [(ngModel)]="form.gender" 
+                required 
+                class="form-control">
+                <option value="MALE">Male</option>
+                <option value="FEMALE">Female</option>
+                <option value="NON_BINARY">Non-Binary</option>
+                <option value="PREFER_NOT_TO_SAY">Prefer not to say</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="idType">Identification Document Type *</label>
+              <select 
+                id="idType" 
+                name="idType" 
+                [(ngModel)]="form.idType" 
+                required 
+                class="form-control">
+                <option value="NATIONAL_ID">National ID / Social Security (SSN)</option>
+                <option value="PASSPORT">International Passport</option>
+                <option value="DRIVERS_LICENSE">Driver's License</option>
+                <option value="STATE_ID">State Government ID</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="idNumber">Document / ID Number *</label>
+              <input 
+                id="idNumber" 
+                name="idNumber" 
+                type="text" 
+                [(ngModel)]="form.idNumber" 
+                placeholder="e.g. DL-982410-X or SSN" 
+                required 
+                class="form-control" />
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 2: Contact & Residential Verification -->
+        <div class="form-section">
+          <div class="section-title">
+            <span class="sec-icon">📍</span>
+            <div>
+              <h3>2. Contact & Residential Address</h3>
+              <p>Primary contact channel and physical address for underwriting risk zoning.</p>
+            </div>
+          </div>
+
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="email">Official Email Address *</label>
+              <input 
+                id="email" 
+                name="email" 
+                type="email" 
+                [(ngModel)]="form.email" 
+                placeholder="e.g. a.wright@example.com" 
+                required 
+                class="form-control" />
+            </div>
+
+            <div class="form-group">
+              <label for="phone">Mobile / Telephone *</label>
+              <input 
+                id="phone" 
+                name="phone" 
+                type="tel" 
+                [(ngModel)]="form.phone" 
+                placeholder="e.g. +1 (555) 234-5678" 
+                required 
+                class="form-control" />
+            </div>
+
+            <div class="form-group full-width">
+              <label for="street">Street Address *</label>
+              <input 
+                id="street" 
+                name="street" 
+                type="text" 
+                [(ngModel)]="streetAddress" 
+                placeholder="e.g. 742 Evergreen Terrace, Apt 4B" 
+                required 
+                class="form-control" />
+            </div>
+
+            <div class="form-group">
+              <label for="city">City *</label>
+              <input 
+                id="city" 
+                name="city" 
+                type="text" 
+                [(ngModel)]="city" 
+                placeholder="e.g. Springfield" 
+                required 
+                class="form-control" />
+            </div>
+
+            <div class="form-group">
+              <label for="state">State / Province *</label>
+              <input 
+                id="state" 
+                name="state" 
+                type="text" 
+                [(ngModel)]="state" 
+                placeholder="e.g. IL or California" 
+                required 
+                class="form-control" />
+            </div>
+
+            <div class="form-group">
+              <label for="zipCode">ZIP / Postal Code *</label>
+              <input 
+                id="zipCode" 
+                name="zipCode" 
+                type="text" 
+                [(ngModel)]="zipCode" 
+                placeholder="e.g. 62704" 
+                required 
+                class="form-control" />
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 3: Employment, Financial & Emergency Contact -->
+        <div class="form-section">
+          <div class="section-title">
+            <span class="sec-icon">💼</span>
+            <div>
+              <h3>3. Employment & Emergency Contact</h3>
+              <p>Underwriting financial background and designated beneficiary/emergency contact.</p>
+            </div>
+          </div>
+
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="occupation">Occupation / Profession *</label>
+              <input 
+                id="occupation" 
+                name="occupation" 
+                type="text" 
+                [(ngModel)]="form.occupation" 
+                placeholder="e.g. Software Engineer, Physician, Accountant" 
+                required 
+                class="form-control" />
+            </div>
+
+            <div class="form-group">
+              <label for="annualIncome">Estimated Annual Gross Income (USD) *</label>
+              <input 
+                id="annualIncome" 
+                name="annualIncome" 
+                type="number" 
+                [(ngModel)]="form.annualIncome" 
+                placeholder="e.g. 75000" 
+                required 
+                class="form-control" />
+            </div>
+
+            <div class="form-group">
+              <label for="emergName">Emergency Contact Full Name *</label>
+              <input 
+                id="emergName" 
+                name="emergName" 
+                type="text" 
+                [(ngModel)]="form.emergencyContactName" 
+                placeholder="e.g. Eleanor Wright (Spouse)" 
+                required 
+                class="form-control" />
+            </div>
+
+            <div class="form-group">
+              <label for="emergPhone">Emergency Contact Phone *</label>
+              <input 
+                id="emergPhone" 
+                name="emergPhone" 
+                type="tel" 
+                [(ngModel)]="form.emergencyContactPhone" 
+                placeholder="e.g. +1 (555) 987-6543" 
+                required 
+                class="form-control" />
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 4: Portal Credentials -->
+        <div class="form-section">
+          <div class="section-title">
+            <span class="sec-icon">🔐</span>
+            <div>
+              <h3>4. Portal Login Credentials</h3>
+              <p>Your unique account identifier and password for secure self-service access.</p>
+            </div>
+          </div>
+
+          <div class="form-grid">
+            <div class="form-group full-width">
+              <label for="username">Portal Username *</label>
+              <input 
+                id="username" 
+                name="username" 
+                type="text" 
+                [(ngModel)]="form.username" 
+                placeholder="Choose a unique portal login handle" 
+                required 
+                class="form-control" />
+            </div>
+
+            <div class="form-group">
+              <label for="password">Password *</label>
+              <input 
+                id="password" 
+                name="password" 
+                type="password" 
+                [(ngModel)]="form.password" 
+                placeholder="Minimum 6 characters" 
+                required 
+                class="form-control" />
+            </div>
+
+            <div class="form-group">
+              <label for="confirmPassword">Confirm Password *</label>
+              <input 
+                id="confirmPassword" 
+                name="confirmPassword" 
+                type="password" 
+                [(ngModel)]="confirmPassword" 
+                placeholder="Re-enter password" 
+                required 
+                class="form-control" />
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 5: Legal Declaration & Consents -->
+        <div class="form-section terms-section">
+          <div class="checkbox-group">
+            <input 
+              id="certify" 
+              name="certify" 
+              type="checkbox" 
+              [(ngModel)]="certificationAgreed" 
+              required />
+            <label for="certify">
+              I solemnly certify under penalty of insurance fraud that all personal, residential, and identification details disclosed above are accurate and true.
+            </label>
+          </div>
+
+          <div class="checkbox-group">
+            <input 
+              id="consent" 
+              name="consent" 
+              type="checkbox" 
+              [(ngModel)]="kycConsentAgreed" 
+              required />
+            <label for="consent">
+              I authorize InsurEdge Compliance & Customer Care officers to perform KYC identification verification and record this profile in the insurance registry.
+            </label>
+          </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="form-actions">
+          <button 
+            type="submit" 
+            class="btn-primary-register" 
+            [disabled]="loading">
+            @if (loading) {
+              <span class="spinner"></span>
+              <span>Submitting KYC Insurance Application...</span>
+            } @else {
+              <span>Submit Application for KYC Approval →</span>
+            }
+          </button>
+
+          <div class="login-redirect-footer">
+            <span>Already an approved policyholder? </span>
+            <a routerLink="/login" class="back-login-link">Sign In with Existing Credentials</a>
+          </div>
+        </div>
+
+      </form>
+    }
+
+  </div>
+</div>
