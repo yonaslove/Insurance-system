@@ -1,0 +1,66 @@
+{
+  "realm": "insurance",
+  "enabled": true,
+  "displayName": "InsurEdge Enterprise Realm",
+  "sslRequired": "external",
+  "registrationAllowed": true,
+  "roles": {
+    "realm": [
+      { "name": "ADMIN", "description": "Full administrative access" },
+      { "name": "UNDERWRITER", "description": "Underwriting and policy issuance" },
+      { "name": "CLAIMS_OFFICER", "description": "Claims review and settlement" },
+      { "name": "FINANCE_OFFICER", "description": "Payment recording and reconciliation" },
+      { "name": "CUSTOMER_SERVICE", "description": "Customer management" },
+      { "name": "CUSTOMER", "description": "Customer self-service portal" },
+      { "name": "READ_ONLY", "description": "Auditor read-only access" }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "insurance-web",
+      "name": "Insurance Web Frontend",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": true,
+      "redirectUris": [
+        "http://localhost:4200/*",
+        "http://localhost:8080/*"
+      ],
+      "webOrigins": [
+        "http://localhost:4200",
+        "http://localhost:8080"
+      ],
+      "protocol": "openid-connect"
+    },
+    {
+      "clientId": "insurance-gateway",
+      "name": "Insurance API Gateway",
+      "enabled": true,
+      "bearerOnly": true,
+      "protocol": "openid-connect"
+    }
+  ],
+  "users": [
+    {
+      "username": "admin",
+      "enabled": true,
+      "email": "admin@insurance-corp.com",
+      "firstName": "System",
+      "lastName": "Administrator",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Admin123!",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "ADMIN",
+        "UNDERWRITER",
+        "CLAIMS_OFFICER",
+        "FINANCE_OFFICER"
+      ]
+    }
+  ]
+}
