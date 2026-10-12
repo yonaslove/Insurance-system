@@ -1,0 +1,113 @@
+<div class="dashboard-page">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Insurance Executive Overview</h1>
+      <p class="page-subtitle">Real-time operational metrics across active policies, claims intake, and collections.</p>
+    </div>
+    <div class="header-actions">
+      <app-button variant="secondary" (btnClick)="refresh()">↻ Refresh</app-button>
+      <app-button variant="primary" routerLink="/policies/new">+ New Policy</app-button>
+    </div>
+  </div>
+
+  <!-- KPI Stat Cards -->
+  <div class="stats-grid">
+    <app-stat-card
+      label="Total Active Customers"
+      [value]="summary().totalCustomers"
+      description="Verified accounts"
+      icon="👥"
+      iconColor="primary">
+    </app-stat-card>
+
+    <app-stat-card
+      label="In-Force Policies"
+      [value]="summary().activePolicies"
+      description="Active coverage contracts"
+      icon="📄"
+      iconColor="success">
+    </app-stat-card>
+
+    <app-stat-card
+      label="Pending Claims"
+      [value]="summary().openClaims"
+      description="Awaiting adjudication"
+      icon="⚖️"
+      iconColor="warning">
+    </app-stat-card>
+
+    <app-stat-card
+      label="Total Collections"
+      [value]="'$' + summary().totalPaymentsAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })"
+      description="Collected premium YTD"
+      icon="💳"
+      iconColor="primary">
+    </app-stat-card>
+  </div>
+
+  <div class="dashboard-grid">
+    <!-- Recent Activity -->
+    <app-card title="Recent Underwriting & Claim Events" subtitle="Audit activity feed across system modules">
+      <div class="activity-feed">
+        @for (act of summary().recentActivities; track act.id) {
+          <div class="activity-item">
+            <div class="activity-icon" [class]="'act-' + act.type.toLowerCase()">
+              @switch (act.type) {
+                @case ('POLICY') { <span>📄</span> }
+                @case ('CLAIM') { <span>⚖️</span> }
+                @case ('PAYMENT') { <span>💳</span> }
+                @default { <span>👥</span> }
+              }
+            </div>
+            <div class="activity-details">
+              <div class="activity-title">{{ act.title }}</div>
+              <div class="activity-desc">{{ act.description }}</div>
+            </div>
+            <div class="activity-time">{{ act.timestamp }}</div>
+          </div>
+        }
+      </div>
+    </app-card>
+
+    <!-- Operational Quick Actions -->
+    <app-card title="Quick Dispatch" subtitle="Accelerated workflow entry points">
+      <div class="quick-actions-list">
+        <a routerLink="/customers/new" class="quick-action-link">
+          <span class="qa-icon">👤</span>
+          <div class="qa-info">
+            <span class="qa-title">Register Customer</span>
+            <span class="qa-desc">Add verified individual or enterprise policyholder</span>
+          </div>
+          <span class="qa-arrow">→</span>
+        </a>
+
+        <a routerLink="/policies/new" class="quick-action-link">
+          <span class="qa-icon">📑</span>
+          <div class="qa-info">
+            <span class="qa-title">Issue Insurance Policy</span>
+            <span class="qa-desc">Bind coverage for health, auto, or property</span>
+          </div>
+          <span class="qa-arrow">→</span>
+        </a>
+
+        <a routerLink="/claims/new" class="quick-action-link">
+          <span class="qa-icon">📝</span>
+          <div class="qa-info">
+            <span class="qa-title">Submit Incident Claim</span>
+            <span class="qa-desc">Log loss details, photos, and claimed damages</span>
+          </div>
+          <span class="qa-arrow">→</span>
+        </a>
+
+        <a routerLink="/payments/new" class="quick-action-link">
+          <span class="qa-icon">💰</span>
+          <div class="qa-info">
+            <span class="qa-title">Record Premium Receipt</span>
+            <span class="qa-desc">Post verified wire or direct debit reconciliation</span>
+          </div>
+          <span class="qa-arrow">→</span>
+        </a>
+      </div>
+    </app-card>
+  </div>
+</div>

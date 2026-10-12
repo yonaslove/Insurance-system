@@ -1,0 +1,267 @@
+<div class="customers-page">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Policyholders & KYC Customer Care</h1>
+      <p class="page-subtitle">Verify customer identity profiles, review KYC compliance documents, and approve policyholder accounts.</p>
+    </div>
+    <div class="header-actions">
+      <app-button variant="primary" routerLink="/customers/new">+ Register Customer</app-button>
+    </div>
+  </div>
+
+  @if (successMessage) {
+    <div class="success-banner">
+      <span>✅</span>
+      <span>{{ successMessage }}</span>
+      <button type="button" class="close-banner" (click)="successMessage = ''">&times;</button>
+    </div>
+  }
+
+  <!-- Status Queue Tabs -->
+  <div class="status-tabs-nav">
+    <button 
+      type="button" 
+      class="tab-pill" 
+      [class.active]="selectedStatusTab() === 'ALL'"
+      (click)="setTab('ALL')">
+      All Policyholders ({{ dataService.customers().length }})
+    </button>
+    <button 
+      type="button" 
+      class="tab-pill pending-tab" 
+      [class.active]="selectedStatusTab() === 'PENDING_APPROVAL'"
+      (click)="setTab('PENDING_APPROVAL')">
+      ⏳ Pending KYC Approvals 
+      @if (pendingCount() > 0) {
+        <span class="badge-count">{{ pendingCount() }}</span>
+      }
+    </button>
+    <button 
+      type="button" 
+      class="tab-pill" 
+      [class.active]="selectedStatusTab() === 'ACTIVE'"
+      (click)="setTab('ACTIVE')">
+      ✓ Active Policyholders
+    </button>
+    <button 
+      type="button" 
+      class="tab-pill" 
+      [class.active]="selectedStatusTab() === 'REJECTED'"
+      (click)="setTab('REJECTED')">
+      ✕ Rejected Applications
+    </button>
+  </div>
+
+  <app-card [noPadding]="true">
+    <div class="filter-bar">
+      <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input
+          type="text"
+          placeholder="Filter by name, email, ID number, or code..."
+          [value]="searchTerm()"
+          (input)="onSearch($event)">
+      </div>
+      <div class="filter-count">
+        Showing <strong>{{ filteredCustomers().length }}</strong> policyholder records
+      </div>
+    </div>
+
+    @if (filteredCustomers().length === 0) {
+      <app-empty-state
+        title="No customers match criteria"
+        message="No customer profiles found in this queue.">
+        <app-button variant="secondary" (btnClick)="resetFilter()">Reset Queue Filter</app-button>
+      </app-empty-state>
+    } @else {
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Customer ID</th>
+              <th>Applicant Name</th>
+              <th>Contact Details</th>
+              <th>KYC Document</th>
+              <th>Occupation / Income</th>
+              <th>Status</th>
+              <th>Compliance Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (cust of filteredCustomers(); track cust.id) {
+              <tr [class.highlight-row]="cust.status === 'PENDING_APPROVAL'">
+                <td>
+                  <strong>{{ cust.customerNumber }}</strong>
+                  <span class="reg-date">{{ cust.createdAt | date:'shortDate' }}</span>
+                </td>
+                <td>
+                  <span class="name-bold">{{ cust.firstName }} {{ cust.lastName }}</span>
+                  <span class="gender-pill">{{ cust.gender || 'Not specified' }}</span>
+                </td>
+                <td>
+                  <div>{{ cust.email }}</div>
+                  <div class="text-sub">{{ cust.phone }}</div>
+                </td>
+                <td>
+                  @if (cust.idNumber) {
+                    <div class="doc-code">{{ cust.idType || 'ID' }}: <code>{{ cust.idNumber }}</code></div>
+                    <div class="text-sub">DOB: {{ cust.dateOfBirth || '—' }}</div>
+                  } @else {
+                    <span class="text-muted">Legacy Profile</span>
+                  }
+                </td>
+                <td>
+                  <div>{{ cust.occupation || 'Standard Policyholder' }}</div>
+                  @if (cust.annualIncome) {
+                    <div class="text-sub">${{ cust.annualIncome | number:'1.0-0' }} / yr</div>
+                  }
+                </td>
+                <td>
+                  @if (cust.status === 'PENDING_APPROVAL') {
+                    <span class="status-pill status-pending">PENDING APPROVAL</span>
+                  } @else if (cust.status === 'ACTIVE') {
+                    <span class="status-pill status-active">ACTIVE</span>
+                  } @else if (cust.status === 'REJECTED') {
+                    <span class="status-pill status-rejected">REJECTED</span>
+                  } @else {
+                    <app-badge [status]="cust.status">{{ cust.status }}</app-badge>
+                  }
+                </td>
+                <td>
+                  <div class="action-cell">
+                    @if (cust.status === 'PENDING_APPROVAL') {
+                      <button 
+                        type="button" 
+                        class="btn-approve" 
+                        title="Approve Customer KYC"
+                        (click)="approveCustomer(cust)">
+                        ✓ Approve
+                      </button>
+                      <button 
+                        type="button" 
+                        class="btn-reject" 
+                        title="Reject Customer Application"
+                        (click)="initiateReject(cust)">
+                        ✕ Reject
+                      </button>
+                    }
+                    <button 
+                      type="button" 
+                      class="btn-view" 
+                      (click)="openKycReview(cust)">
+                      Details
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </app-card>
+
+  <!-- KYC Details Modal -->
+  @if (selectedCustomer && !showRejectModal) {
+    <div class="modal-backdrop" (click)="closeModal()">
+      <div class="modal-card" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <div>
+            <h3>Policyholder KYC Inspection</h3>
+            <span class="modal-ref">{{ selectedCustomer.customerNumber }} &bull; {{ selectedCustomer.status }}</span>
+          </div>
+          <button type="button" class="btn-close" (click)="closeModal()">&times;</button>
+        </div>
+
+        <div class="modal-body">
+          <div class="kyc-grid">
+            <div class="kyc-field">
+              <label>Full Legal Name</label>
+              <div>{{ selectedCustomer.firstName }} {{ selectedCustomer.lastName }}</div>
+            </div>
+            <div class="kyc-field">
+              <label>Date of Birth</label>
+              <div>{{ selectedCustomer.dateOfBirth || 'Not recorded' }}</div>
+            </div>
+            <div class="kyc-field">
+              <label>Gender</label>
+              <div>{{ selectedCustomer.gender || 'Not recorded' }}</div>
+            </div>
+            <div class="kyc-field">
+              <label>KYC ID Document</label>
+              <div>{{ selectedCustomer.idType || 'ID' }}: <strong>{{ selectedCustomer.idNumber || 'None' }}</strong></div>
+            </div>
+            <div class="kyc-field full-span">
+              <label>Residential Address</label>
+              <div>{{ selectedCustomer.address }}</div>
+            </div>
+            <div class="kyc-field">
+              <label>Contact Email</label>
+              <div>{{ selectedCustomer.email }}</div>
+            </div>
+            <div class="kyc-field">
+              <label>Telephone</label>
+              <div>{{ selectedCustomer.phone }}</div>
+            </div>
+            <div class="kyc-field">
+              <label>Occupation</label>
+              <div>{{ selectedCustomer.occupation || 'Not stated' }}</div>
+            </div>
+            <div class="kyc-field">
+              <label>Annual Gross Income</label>
+              <div>{{ selectedCustomer.annualIncome ? ('$' + (selectedCustomer.annualIncome | number:'1.2-2')) : 'Not stated' }}</div>
+            </div>
+            <div class="kyc-field">
+              <label>Emergency Contact</label>
+              <div>{{ selectedCustomer.emergencyContactName || 'None' }} ({{ selectedCustomer.emergencyContactPhone || 'None' }})</div>
+            </div>
+            <div class="kyc-field">
+              <label>Application Date</label>
+              <div>{{ selectedCustomer.createdAt | date:'medium' }}</div>
+            </div>
+            @if (selectedCustomer.rejectionReason) {
+              <div class="kyc-field full-span rejection-notice">
+                <label>Rejection Reason</label>
+                <div class="text-danger">{{ selectedCustomer.rejectionReason }}</div>
+              </div>
+            }
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          @if (selectedCustomer.status === 'PENDING_APPROVAL') {
+            <button type="button" class="btn-reject" (click)="initiateReject(selectedCustomer)">✕ Reject Application</button>
+            <button type="button" class="btn-approve" (click)="approveCustomer(selectedCustomer)">✓ Approve & Activate Policyholder</button>
+          } @else {
+            <button type="button" class="btn-secondary" (click)="closeModal()">Close</button>
+          }
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Rejection Reason Modal -->
+  @if (showRejectModal && selectedCustomer) {
+    <div class="modal-backdrop" (click)="closeModal()">
+      <div class="modal-card sm-modal" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3>Reject Registration Application</h3>
+          <button type="button" class="btn-close" (click)="closeModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p>Please enter the official compliance rejection reason for <strong>{{ selectedCustomer.firstName }} {{ selectedCustomer.lastName }}</strong>:</p>
+          <textarea 
+            rows="3" 
+            [(ngModel)]="rejectionReason" 
+            placeholder="e.g. Expired ID document, invalid address verification..." 
+            class="form-control"></textarea>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" (click)="closeModal()">Cancel</button>
+          <button type="button" class="btn-danger-confirm" (click)="confirmReject()">Confirm Rejection</button>
+        </div>
+      </div>
+    </div>
+  }
+
+</div>

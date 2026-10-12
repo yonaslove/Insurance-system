@@ -1,0 +1,92 @@
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-logo">🛡️</div>
+    <div class="brand-text">
+      <h2>InsurEdge</h2>
+      <span class="brand-tag">Enterprise ERP</span>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-section">OPERATIONS & WORKSPACE</div>
+
+    <!-- Customer Self-Service Links -->
+    @if (authService.hasRole('CUSTOMER')) {
+      <a routerLink="/portal" routerLinkActive="active" class="nav-item">
+        <span class="nav-icon">🏠</span>
+        <span>My Insurance Portal</span>
+      </a>
+      <a routerLink="/portal" [queryParams]="{tab: 'file-claim'}" class="nav-item">
+        <span class="nav-icon">➕</span>
+        <span>File a Claim</span>
+      </a>
+    }
+
+    <!-- Admin / Overview Links -->
+    @if (authService.hasAnyRole(['ADMIN', 'READ_ONLY'])) {
+      <a routerLink="/dashboard" routerLinkActive="active" class="nav-item">
+        <span class="nav-icon">📊</span>
+        <span>Executive Dashboard</span>
+      </a>
+    }
+
+    <!-- Customer Service / Admin Links -->
+    @if (authService.hasAnyRole(['ADMIN', 'CUSTOMER_SERVICE'])) {
+      <a routerLink="/customers" routerLinkActive="active" class="nav-item">
+        <span class="nav-icon">👥</span>
+        <span>Customers Directory</span>
+      </a>
+    }
+
+    <!-- Underwriting / Admin Links -->
+    @if (authService.hasAnyRole(['ADMIN', 'UNDERWRITER'])) {
+      <a routerLink="/products" routerLinkActive="active" class="nav-item">
+        <span class="nav-icon">📦</span>
+        <span>Products Catalog</span>
+      </a>
+      <a routerLink="/policies" routerLinkActive="active" class="nav-item">
+        <span class="nav-icon">📄</span>
+        <span>Policy Workbench</span>
+      </a>
+    }
+
+    <!-- Claims Officer / Admin Links -->
+    @if (authService.hasAnyRole(['ADMIN', 'CLAIMS_OFFICER'])) {
+      <a routerLink="/claims" routerLinkActive="active" class="nav-item">
+        <span class="nav-icon">⚖️</span>
+        <span>Claims Adjudication</span>
+      </a>
+    }
+
+    <!-- Finance Officer / Admin Links -->
+    @if (authService.hasAnyRole(['ADMIN', 'FINANCE_OFFICER'])) {
+      <a routerLink="/payments" routerLinkActive="active" class="nav-item">
+        <span class="nav-icon">💳</span>
+        <span>Payments & Treasury</span>
+      </a>
+    }
+
+    <!-- Admin Governance Link -->
+    @if (authService.hasRole('ADMIN')) {
+      <div class="nav-section">GOVERNANCE</div>
+      <a routerLink="/admin/users" routerLinkActive="active" class="nav-item">
+        <span class="nav-icon">🛡️</span>
+        <span>Actor Provisioning</span>
+      </a>
+    }
+  </nav>
+
+  <!-- Sidebar Footer: Logged In Account Details (No persona switcher) -->
+  <div class="sidebar-footer">
+    @if (authService.currentUser(); as user) {
+      <div class="user-session-card">
+        <div class="user-session-header">
+          <span class="session-label">Signed In As</span>
+          <span class="role-badge role-{{ user.roles[0].toLowerCase() }}">{{ user.roles[0] }}</span>
+        </div>
+        <div class="session-name">{{ user.name }}</div>
+        <div class="session-username"><code>&#64;{{ user.username }}</code></div>
+      </div>
+    }
+  </div>
+</aside>

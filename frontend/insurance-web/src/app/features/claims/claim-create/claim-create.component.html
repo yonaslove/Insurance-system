@@ -1,0 +1,59 @@
+<div class="create-page">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Register Insurance Claim</h1>
+      <p class="page-subtitle">File loss notification, loss incident details, and claimed settlement figures.</p>
+    </div>
+    <app-button variant="secondary" routerLink="/claims">Back to Claims</app-button>
+  </div>
+
+  <div class="form-wrapper">
+    <app-card title="Claim Loss Details">
+      <form [formGroup]="claimForm" (ngSubmit)="onSubmit()">
+        <div class="form-grid">
+          <div class="form-group full-width">
+            <label for="policyId">Associated Insurance Policy *</label>
+            <select id="policyId" formControlName="policyId">
+              <option value="" disabled>-- Select Policy --</option>
+              @for (p of dataService.policies(); track p.id) {
+                <option [value]="p.id">{{ p.policyNumber }} ({{ p.customerName }}) - {{ p.productName }}</option>
+              }
+            </select>
+            @if (claimForm.get('policyId')?.touched && claimForm.get('policyId')?.invalid) {
+              <span class="field-error">Associated policy is required</span>
+            }
+          </div>
+
+          <div class="form-group">
+            <label for="incidentDate">Incident Occurrence Date *</label>
+            <input id="incidentDate" type="date" formControlName="incidentDate">
+            @if (claimForm.get('incidentDate')?.touched && claimForm.get('incidentDate')?.invalid) {
+              <span class="field-error">Incident date is required</span>
+            }
+          </div>
+
+          <div class="form-group">
+            <label for="claimedAmount">Claimed Loss Damage (USD) *</label>
+            <input id="claimedAmount" type="number" step="0.01" formControlName="claimedAmount" placeholder="2500.00">
+            @if (claimForm.get('claimedAmount')?.touched && claimForm.get('claimedAmount')?.invalid) {
+              <span class="field-error">Valid positive amount required</span>
+            }
+          </div>
+
+          <div class="form-group full-width">
+            <label for="description">Detailed Narrative of the Incident *</label>
+            <textarea id="description" formControlName="description" rows="4" placeholder="Describe the sequence of events, damages sustained, and any authorities notified..."></textarea>
+            @if (claimForm.get('description')?.touched && claimForm.get('description')?.invalid) {
+              <span class="field-error">Incident narrative is required</span>
+            }
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <app-button type="button" variant="secondary" routerLink="/claims">Cancel</app-button>
+          <app-button type="submit" variant="primary" [disabled]="claimForm.invalid">Submit Claim for Review</app-button>
+        </div>
+      </form>
+    </app-card>
+  </div>
+</div>

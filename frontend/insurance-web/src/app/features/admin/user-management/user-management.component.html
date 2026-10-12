@@ -1,0 +1,266 @@
+<div class="user-management-page">
+  
+  <div class="page-header">
+    <div>
+      <span class="header-badge">Admin Responsibility Console</span>
+      <h1>Actor & User Provisioning</h1>
+      <p>Manage system actors, provision new staff roles, and onboard enterprise policyholders with exact database credentials.</p>
+    </div>
+
+    <button type="button" class="btn-create-user" (click)="showCreateModal = true">
+      ➕ Provision New Actor / Customer
+    </button>
+  </div>
+
+  @if (successMessage) {
+    <div class="alert-success">
+      <span>✅</span>
+      <span>{{ successMessage }}</span>
+      <button type="button" class="btn-close" (click)="successMessage = ''">&times;</button>
+    </div>
+  }
+
+  <!-- Stats Grid -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <span class="stat-lbl">Total Provisioned Actors</span>
+      <span class="stat-num">{{ users.length }}</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-lbl">Underwriters & Actuaries</span>
+      <span class="stat-num">{{ getCountForRole('UNDERWRITER') }}</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-lbl">Claims Adjusters</span>
+      <span class="stat-num">{{ getCountForRole('CLAIMS_OFFICER') }}</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-lbl">Registered Customers</span>
+      <span class="stat-num">{{ getCountForRole('CUSTOMER') }}</span>
+    </div>
+  </div>
+
+  <!-- Filter Pills -->
+  <div class="filter-bar">
+    <button 
+      type="button" 
+      class="filter-pill" 
+      [class.active]="selectedRoleFilter === 'ALL'"
+      (click)="selectedRoleFilter = 'ALL'">
+      All Actors ({{ users.length }})
+    </button>
+    <button 
+      type="button" 
+      class="filter-pill" 
+      [class.active]="selectedRoleFilter === 'ADMIN'"
+      (click)="selectedRoleFilter = 'ADMIN'">
+      Administrators
+    </button>
+    <button 
+      type="button" 
+      class="filter-pill" 
+      [class.active]="selectedRoleFilter === 'UNDERWRITER'"
+      (click)="selectedRoleFilter = 'UNDERWRITER'">
+      Underwriters
+    </button>
+    <button 
+      type="button" 
+      class="filter-pill" 
+      [class.active]="selectedRoleFilter === 'CLAIMS_OFFICER'"
+      (click)="selectedRoleFilter = 'CLAIMS_OFFICER'">
+      Claims Officers
+    </button>
+    <button 
+      type="button" 
+      class="filter-pill" 
+      [class.active]="selectedRoleFilter === 'FINANCE_OFFICER'"
+      (click)="selectedRoleFilter = 'FINANCE_OFFICER'">
+      Finance Officers
+    </button>
+    <button 
+      type="button" 
+      class="filter-pill" 
+      [class.active]="selectedRoleFilter === 'CUSTOMER_SERVICE'"
+      (click)="selectedRoleFilter = 'CUSTOMER_SERVICE'">
+      Customer Service
+    </button>
+    <button 
+      type="button" 
+      class="filter-pill" 
+      [class.active]="selectedRoleFilter === 'CUSTOMER'"
+      (click)="selectedRoleFilter = 'CUSTOMER'">
+      Customers
+    </button>
+  </div>
+
+  <!-- Users Table -->
+  <div class="table-responsive">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Actor / Full Name</th>
+          <th>Username</th>
+          <th>Email</th>
+          <th>Role / Responsibility</th>
+          <th>Assigned Workspace</th>
+          <th>Status</th>
+          <th>Created Date</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (user of filteredUsers; track user.id) {
+          <tr>
+            <td>
+              <div class="user-cell">
+                <span class="avatar-sm">{{ user.fullName.charAt(0) }}</span>
+                <strong>{{ user.fullName }}</strong>
+              </div>
+            </td>
+            <td><code>{{ user.username }}</code></td>
+            <td>{{ user.email }}</td>
+            <td>
+              <span class="role-badge role-{{ user.role.toLowerCase() }}">{{ user.role }}</span>
+            </td>
+            <td>
+              <span class="workspace-tag">{{ getTargetWorkspace(user.role) }}</span>
+            </td>
+            <td>
+              <span class="status-indicator-tag status-{{ user.status.toLowerCase().replace('_', '-') }}">{{ user.status }}</span>
+              @if (user.status === 'PENDING_APPROVAL' && user.customerId) {
+                <button type="button" class="btn-quick-approve" (click)="approveCustomerUser(user)">✓ Approve KYC</button>
+              }
+            </td>
+            <td>{{ user.createdAt | date:'mediumDate' }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Provision Modal -->
+  @if (showCreateModal) {
+    <div class="modal-backdrop">
+      <div class="modal-window">
+        <div class="modal-header">
+          <h2>Provision New Actor or Customer</h2>
+          <button type="button" class="btn-close-modal" (click)="showCreateModal = false">&times;</button>
+        </div>
+
+        @if (modalError) {
+          <div class="alert-modal-error">⚠️ {{ modalError }}</div>
+        }
+
+        <form (ngSubmit)="onCreateUser()" class="modal-form">
+          
+          <div class="form-group">
+            <label for="actorRole">Assign Actor Role & Responsibility *</label>
+            <select 
+              id="actorRole" 
+              name="actorRole" 
+              [(ngModel)]="newUser.role" 
+              required 
+              class="form-control">
+              <option value="CUSTOMER">Customer (Policyholder Portal)</option>
+              <option value="UNDERWRITER">Underwriter (Policy Issuance & Risk)</option>
+              <option value="CLAIMS_OFFICER">Claims Officer (Claims Review & Adjudication)</option>
+              <option value="FINANCE_OFFICER">Finance Officer (Treasury & Payments)</option>
+              <option value="CUSTOMER_SERVICE">Customer Service (Directory & Support)</option>
+              <option value="ADMIN">Administrator (Full Access)</option>
+            </select>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="fullName">Full Name *</label>
+              <input 
+                id="fullName" 
+                name="fullName" 
+                type="text" 
+                [(ngModel)]="newUser.fullName" 
+                placeholder="e.g. Elena Rostova" 
+                required 
+                class="form-control" />
+            </div>
+
+            <div class="form-group">
+              <label for="userEmail">Email Address *</label>
+              <input 
+                id="userEmail" 
+                name="userEmail" 
+                type="email" 
+                [(ngModel)]="newUser.email" 
+                placeholder="e.g. elena@insurance-corp.com" 
+                required 
+                class="form-control" />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="userUsername">Login Username *</label>
+              <input 
+                id="userUsername" 
+                name="userUsername" 
+                type="text" 
+                [(ngModel)]="newUser.username" 
+                placeholder="Unique username" 
+                required 
+                class="form-control" />
+            </div>
+
+            <div class="form-group">
+              <label for="userPassword">Database Password *</label>
+              <input 
+                id="userPassword" 
+                name="userPassword" 
+                type="password" 
+                [(ngModel)]="newUser.password" 
+                placeholder="Min 6 characters" 
+                required 
+                class="form-control" />
+            </div>
+          </div>
+
+          @if (newUser.role === 'CUSTOMER') {
+            <div class="form-row">
+              <div class="form-group">
+                <label for="custPhone">Customer Phone</label>
+                <input 
+                  id="custPhone" 
+                  name="custPhone" 
+                  type="text" 
+                  [(ngModel)]="newUser.phone" 
+                  placeholder="+1 (555) 000-0000" 
+                  class="form-control" />
+              </div>
+
+              <div class="form-group">
+                <label for="custAddress">Customer Address</label>
+                <input 
+                  id="custAddress" 
+                  name="custAddress" 
+                  type="text" 
+                  [(ngModel)]="newUser.address" 
+                  placeholder="Street, City, State" 
+                  class="form-control" />
+              </div>
+            </div>
+          }
+
+          <div class="modal-footer">
+            <button type="button" class="btn-cancel" (click)="showCreateModal = false">Cancel</button>
+            <button type="submit" class="btn-submit-user" [disabled]="submitting">
+              @if (submitting) {
+                <span>Provisioning...</span>
+              } @else {
+                <span>Create Actor in Database →</span>
+              }
+            </button>
+          </div>
+
+        </form>
+      </div>
+    </div>
+  }
+
+</div>

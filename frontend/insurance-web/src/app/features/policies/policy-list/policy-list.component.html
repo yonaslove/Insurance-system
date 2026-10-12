@@ -1,0 +1,54 @@
+<div class="policies-page">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Policy Lifecycle & Coverage Ledger</h1>
+      <p class="page-subtitle">Track policy issuance, effective dates, premium installments, and renewals.</p>
+    </div>
+    <div class="header-actions">
+      <app-button variant="primary" routerLink="/policies/new">+ Issue Policy</app-button>
+    </div>
+  </div>
+
+  <app-card [noPadding]="true">
+    @if (policies().length === 0) {
+      <app-empty-state
+        title="No policies bound"
+        message="There are no active or pending policies in the database.">
+        <app-button variant="primary" routerLink="/policies/new">Issue First Policy</app-button>
+      </app-empty-state>
+    } @else {
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Policy Number</th>
+              <th>Customer</th>
+              <th>Coverage Product</th>
+              <th>Effective Period</th>
+              <th>Premium</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (pol of policies(); track pol.id) {
+              <tr>
+                <td><strong>{{ pol.policyNumber }}</strong></td>
+                <td>{{ pol.customerName || pol.customerId }}</td>
+                <td>{{ pol.productName || pol.productId }}</td>
+                <td>{{ pol.startDate | date:'shortDate' }} – {{ pol.endDate | date:'shortDate' }}</td>
+                <td><strong>${{ pol.premiumAmount.toFixed(2) }}</strong> {{ pol.currency }}</td>
+                <td>
+                  <app-badge [status]="pol.status">{{ pol.status }}</app-badge>
+                </td>
+                <td>
+                  <app-button variant="outline" size="sm" routerLink="/claims/new">File Claim</app-button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </app-card>
+</div>

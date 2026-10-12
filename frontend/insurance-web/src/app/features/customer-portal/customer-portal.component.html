@@ -1,0 +1,541 @@
+<div class="customer-portal">
+  
+  <!-- Portal Banner -->
+  <div class="portal-banner">
+    <div class="banner-content">
+      <div class="user-greeting">
+        <span class="greeting-badge">Customer Self-Service Hub</span>
+        <h1>Welcome, {{ user?.name || 'Valued Policyholder' }}</h1>
+        <p>Manage your verified insurance coverage, apply for policies, file loss claims, and inspect settlement disbursements.</p>
+      </div>
+      <div class="portal-quick-meta">
+        <div class="meta-item">
+          <span class="meta-label">Customer ID</span>
+          <span class="meta-val">{{ customerNumber }}</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">Account Status</span>
+          @if (isPendingApproval) {
+            <span class="status-pill status-pending">PENDING KYC APPROVAL</span>
+          } @else if (isApproved) {
+            <span class="status-pill status-active">ACTIVE &amp; VERIFIED</span>
+          } @else if (isRejected) {
+            <span class="status-pill status-rejected">REJECTED</span>
+          } @else {
+            <span class="status-pill status-active">{{ status }}</span>
+          }
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">Active Policies</span>
+          <span class="meta-val">{{ myPolicies.length }}</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">Claims Filed</span>
+          <span class="meta-val">{{ myClaims.length }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pending KYC Notice Banner -->
+  @if (isPendingApproval) {
+    <div class="kyc-warning-banner">
+      <div class="kyc-warn-icon">⏳</div>
+      <div class="kyc-warn-text">
+        <strong>Customer Registration Pending Review &amp; Approval</strong>
+        <p>Your profile and KYC identification documents are currently under review by our Customer Care compliance team. Once verified and approved by a Customer Care Officer or Administrator, policy binding and claims filing will be enabled automatically.</p>
+      </div>
+      <button type="button" class="btn-check-kyc" (click)="activeTab = 'kyc-profile'">View Submitted KYC Profile &rarr;</button>
+    </div>
+  }
+
+  @if (isRejected) {
+    <div class="kyc-rejected-banner">
+      <div class="kyc-warn-icon">⚠️</div>
+      <div class="kyc-warn-text">
+        <strong>KYC Identity Verification Rejected</strong>
+        <p>Reason: {{ currentCustomer?.rejectionReason || 'Documentation failed verification checks' }}. Please contact customer care for assistance.</p>
+      </div>
+    </div>
+  }
+
+  @if (successMessage) {
+    <div class="success-banner">
+      <span>✅</span>
+      <span>{{ successMessage }}</span>
+      <button type="button" class="close-btn" (click)="successMessage = ''">&times;</button>
+    </div>
+  }
+
+  <!-- Navigation Tabs -->
+  <div class="portal-tabs">
+    <button 
+      type="button" 
+      class="tab-btn" 
+      [class.active]="activeTab === 'policies'"
+      (click)="activeTab = 'policies'">
+      📄 My Policies ({{ myPolicies.length }})
+    </button>
+    <button 
+      type="button" 
+      class="tab-btn" 
+      [class.active]="activeTab === 'apply-policy'"
+      (click)="activeTab = 'apply-policy'">
+      ➕ Apply for Coverage
+    </button>
+    <button 
+      type="button" 
+      class="tab-btn" 
+      [class.active]="activeTab === 'file-claim'"
+      (click)="activeTab = 'file-claim'">
+      🚨 Report Incident &amp; File Claim
+    </button>
+    <button 
+      type="button" 
+      class="tab-btn" 
+      [class.active]="activeTab === 'claims'"
+      (click)="activeTab = 'claims'">
+      ⚖️ Claim Tracking ({{ myClaims.length }})
+    </button>
+    <button 
+      type="button" 
+      class="tab-btn" 
+      [class.active]="activeTab === 'payments'"
+      (click)="activeTab = 'payments'">
+      💳 Receipts &amp; Payments ({{ myPayments.length }})
+    </button>
+    <button 
+      type="button" 
+      class="tab-btn" 
+      [class.active]="activeTab === 'kyc-profile'"
+      (click)="activeTab = 'kyc-profile'">
+      🪪 KYC Profile Details
+    </button>
+  </div>
+
+  <!-- Tab 1: My Policies -->
+  @if (activeTab === 'policies') {
+    <div class="tab-panel">
+      <div class="panel-header">
+        <div>
+          <h2>Your Active Insurance Policies</h2>
+          <p class="panel-sub">Digital coverage certificates and policy terms bound to your account.</p>
+        </div>
+        @if (isApproved) {
+          <button type="button" class="btn-action" (click)="activeTab = 'apply-policy'">+ Apply for New Policy</button>
+        }
+      </div>
+
+      @if (myPolicies.length === 0) {
+        <div class="empty-box">
+          <p>No active insurance policies linked to your account yet.</p>
+          @if (isApproved) {
+            <button type="button" class="btn-primary-action" (click)="activeTab = 'apply-policy'">Apply for Policy Coverage &rarr;</button>
+          } @else {
+            <p class="text-sub">Policy applications will be available once your KYC registration is approved.</p>
+          }
+        </div>
+      } @else {
+        <div class="policies-grid">
+          @for (policy of myPolicies; track policy.id) {
+            <div class="policy-card">
+              <div class="card-top">
+                <span class="policy-num">{{ policy.policyNumber }}</span>
+                <span class="status-pill status-active">{{ policy.status }}</span>
+              </div>
+              <h3 class="product-name">{{ policy.productName || 'Standard Coverage' }}</h3>
+              <div class="policy-details">
+                <div class="detail-row">
+                  <span class="lbl">Coverage Period:</span>
+                  <span class="val">{{ policy.startDate }} to {{ policy.endDate }}</span>
+                </div>
+                <div class="detail-row">
+                  <span class="lbl">Annual Premium:</span>
+                  <span class="val highlight">${{ policy.premiumAmount | number:'1.2-2' }} {{ policy.currency }}</span>
+                </div>
+              </div>
+              <button 
+                type="button" 
+                class="btn-sm-claim"
+                [disabled]="!isApproved"
+                (click)="initiateClaimForPolicy(policy.id)">
+                Report Incident &amp; File Claim &rarr;
+              </button>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Tab 2: Apply for Policy -->
+  @if (activeTab === 'apply-policy') {
+    <div class="tab-panel">
+      <div class="panel-header">
+        <div>
+          <h2>Apply for Insurance Coverage</h2>
+          <p class="panel-sub">Select an insurance product to bind new coverage to your policyholder profile.</p>
+        </div>
+      </div>
+
+      @if (isPendingApproval) {
+        <div class="locked-card">
+          <span class="lock-icon">🔒</span>
+          <h3>Policy Application Locked</h3>
+          <p>Your account is currently undergoing KYC identity verification by Customer Care. Once an officer approves your application, you will be able to enroll in policies immediately.</p>
+        </div>
+      } @else {
+        <div class="apply-form-card">
+          @if (policyError) {
+            <div class="error-box">⚠️ {{ policyError }}</div>
+          }
+
+          <form (ngSubmit)="applyForPolicy()">
+            <div class="form-group">
+              <label for="productSelect">Select Insurance Product *</label>
+              <select 
+                id="productSelect" 
+                name="productSelect" 
+                [(ngModel)]="selectedProductId" 
+                required 
+                class="form-control">
+                <option value="" disabled>-- Select a coverage product --</option>
+                @for (prod of availableProducts; track prod.id) {
+                  <option [value]="prod.id">{{ prod.name }} ({{ prod.category }}) — Base: ${{ prod.basePremium }}/mo</option>
+                }
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="coverageLimit">Coverage Limit (USD)</label>
+              <select 
+                id="coverageLimit" 
+                name="coverageLimit" 
+                [(ngModel)]="policyCoverageLimit" 
+                class="form-control">
+                <option [value]="25000">$25,000 Coverage Limit</option>
+                <option [value]="50000">$50,000 Standard Limit</option>
+                <option [value]="100000">$100,000 High Coverage Limit</option>
+                <option [value]="250000">$250,000 Premier Executive Limit</option>
+              </select>
+            </div>
+
+            <div class="form-footer">
+              <button type="submit" class="btn-submit-policy">Submit Application &amp; Bind Policy &rarr;</button>
+            </div>
+          </form>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Tab 3: Submit a Claim -->
+  @if (activeTab === 'file-claim') {
+    <div class="tab-panel">
+      <div class="panel-header">
+        <div>
+          <h2>Submit an Insurance Claim</h2>
+          <p class="panel-sub">Report a loss or casualty event directly against your active insurance policy for claims officer investigation.</p>
+        </div>
+      </div>
+
+      @if (isPendingApproval) {
+        <div class="locked-card">
+          <span class="lock-icon">🔒</span>
+          <h3>Claims Filing Locked</h3>
+          <p>Your customer account is currently pending KYC verification. Once approved by Customer Care or an Administrator, claims submission will be enabled.</p>
+        </div>
+      } @else if (myPolicies.length === 0) {
+        <div class="empty-box">
+          <p>You do not have any active policies to file a claim against.</p>
+          <button type="button" class="btn-primary-action" (click)="activeTab = 'apply-policy'">Apply for Policy First &rarr;</button>
+        </div>
+      } @else {
+        <div class="claim-form-card">
+          @if (claimError) {
+            <div class="error-box">⚠️ {{ claimError }}</div>
+          }
+
+          <form (ngSubmit)="submitClaim()">
+            <div class="form-grid-2">
+              <div class="form-group">
+                <label for="claimPolicy">Select Covered Policy *</label>
+                <select 
+                  id="claimPolicy" 
+                  name="claimPolicy" 
+                  [(ngModel)]="newClaim.policyId" 
+                  required 
+                  class="form-control">
+                  <option value="" disabled>-- Select your active policy --</option>
+                  @for (policy of myPolicies; track policy.id) {
+                    <option [value]="policy.id">{{ policy.policyNumber }} ({{ policy.productName || 'Coverage' }})</option>
+                  }
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="incidentDate">Incident Date *</label>
+                <input 
+                  id="incidentDate" 
+                  name="incidentDate" 
+                  type="date" 
+                  [(ngModel)]="newClaim.incidentDate" 
+                  required 
+                  class="form-control" />
+              </div>
+
+              <div class="form-group">
+                <label for="category">Incident Type / Category *</label>
+                <select 
+                  id="category" 
+                  name="category" 
+                  [(ngModel)]="claimCategory" 
+                  class="form-control">
+                  <option value="AUTO_COLLISION">Auto Collision / Traffic Impact</option>
+                  <option value="PROPERTY_WATER_DAMAGE">Property Water Damage / Pipe Burst</option>
+                  <option value="HEALTH_INPATIENT">Medical Inpatient Hospitalization</option>
+                  <option value="BURGLARY_THEFT">Theft / Break-in / Vandalism</option>
+                  <option value="NATURAL_STORM">Storm / Hail / Wind Peril</option>
+                  <option value="THIRD_PARTY_LIABILITY">Third-Party Bodily Injury / Liability</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="claimedAmount">Claimed Loss Amount (USD) *</label>
+                <input 
+                  id="claimedAmount" 
+                  name="claimedAmount" 
+                  type="number" 
+                  step="0.01" 
+                  [(ngModel)]="newClaim.claimedAmount" 
+                  placeholder="e.g. 1500.00" 
+                  required 
+                  class="form-control" />
+              </div>
+
+              <div class="form-group">
+                <label for="location">Incident Location</label>
+                <input 
+                  id="location" 
+                  name="location" 
+                  type="text" 
+                  [(ngModel)]="incidentLocation" 
+                  placeholder="e.g. 4th Ave &amp; Main St, Springfield" 
+                  class="form-control" />
+              </div>
+
+              <div class="form-group">
+                <label for="policeReport">Police / Incident Report Ref (if applicable)</label>
+                <input 
+                  id="policeReport" 
+                  name="policeReport" 
+                  type="text" 
+                  [(ngModel)]="policeReportNumber" 
+                  placeholder="e.g. SPD-2026-8812" 
+                  class="form-control" />
+              </div>
+            </div>
+
+            <div class="form-group full-span">
+              <label for="description">Detailed Description &amp; Evidence Notes *</label>
+              <textarea 
+                id="description" 
+                name="description" 
+                rows="4" 
+                [(ngModel)]="newClaim.description" 
+                placeholder="Describe exactly what happened, circumstances of the loss, estimated repair costs, or doctor diagnosis..." 
+                required 
+                class="form-control"></textarea>
+            </div>
+
+            <div class="form-footer">
+              <button type="submit" class="btn-submit-claim">Submit Official Claim for Claims Officer Adjudication &rarr;</button>
+            </div>
+          </form>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Tab 4: Claims Tracking -->
+  @if (activeTab === 'claims') {
+    <div class="tab-panel">
+      <div class="panel-header">
+        <div>
+          <h2>Your Insurance Claims &amp; Settlement Adjudication</h2>
+          <p class="panel-sub">Track real-time adjudication decisions and adjuster settlement reviews.</p>
+        </div>
+      </div>
+
+      @if (myClaims.length === 0) {
+        <div class="empty-box">
+          <p>You have not submitted any insurance claims yet.</p>
+          @if (isApproved && myPolicies.length > 0) {
+            <button type="button" class="btn-primary-action" (click)="activeTab = 'file-claim'">Report Loss Claim &rarr;</button>
+          }
+        </div>
+      } @else {
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Claim Number</th>
+                <th>Policy Ref</th>
+                <th>Incident Date</th>
+                <th>Claimed Amount</th>
+                <th>Approved Settlement</th>
+                <th>Status</th>
+                <th>Claims Officer Findings</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (claim of myClaims; track claim.id) {
+                <tr>
+                  <td><strong>{{ claim.claimNumber }}</strong></td>
+                  <td>{{ claim.policyNumber || claim.policyId }}</td>
+                  <td>{{ claim.incidentDate }}</td>
+                  <td><strong>${{ claim.claimedAmount | number:'1.2-2' }}</strong></td>
+                  <td>
+                    @if (claim.status === 'APPROVED' && claim.approvedAmount) {
+                      <strong class="approved-text">${{ claim.approvedAmount | number:'1.2-2' }}</strong>
+                    } @else if (claim.status === 'REJECTED') {
+                      <span class="text-danger">$0.00 (Declined)</span>
+                    } @else {
+                      <span class="text-muted">Awaiting Adjudication</span>
+                    }
+                  </td>
+                  <td>
+                    @if (claim.status === 'SUBMITTED' || claim.status === 'UNDER_REVIEW') {
+                      <span class="status-pill status-pending">IN REVIEW</span>
+                    } @else if (claim.status === 'APPROVED') {
+                      <span class="status-pill status-active">APPROVED</span>
+                    } @else if (claim.status === 'REJECTED') {
+                      <span class="status-pill status-rejected">REJECTED</span>
+                    } @else {
+                      <span class="status-pill status-active">{{ claim.status }}</span>
+                    }
+                  </td>
+                  <td class="reviewer-notes">
+                    {{ claim.reviewerNotes || 'Under investigation by Claims Officer' }}
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Tab 5: Payments -->
+  @if (activeTab === 'payments') {
+    <div class="tab-panel">
+      <div class="panel-header">
+        <h2>Payment Records &amp; Premium Receipts</h2>
+      </div>
+
+      @if (myPayments.length === 0) {
+        <div class="empty-box">
+          <p>No payment records found.</p>
+        </div>
+      } @else {
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Receipt Reference</th>
+                <th>Policy ID</th>
+                <th>Method Reference</th>
+                <th>Amount</th>
+                <th>Status</th>
+                <th>Paid Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (pay of myPayments; track pay.id) {
+                <tr>
+                  <td><code>{{ pay.paymentReference }}</code></td>
+                  <td>{{ pay.policyId }}</td>
+                  <td>{{ pay.paymentMethodReference }}</td>
+                  <td><strong>${{ pay.amount | number:'1.2-2' }} {{ pay.currency }}</strong></td>
+                  <td><span class="status-pill status-active">{{ pay.status }}</span></td>
+                  <td>{{ pay.paidAt | date:'medium' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Tab 6: KYC Profile Details -->
+  @if (activeTab === 'kyc-profile') {
+    <div class="tab-panel">
+      <div class="panel-header">
+        <div>
+          <h2>Your Verified KYC Insurance Profile</h2>
+          <p class="panel-sub">Official identity records on file with InsurEdge Compliance.</p>
+        </div>
+      </div>
+
+      <div class="profile-card">
+        <div class="profile-grid">
+          <div class="profile-item">
+            <span class="p-lbl">Customer Reference</span>
+            <span class="p-val"><code>{{ customerNumber }}</code></span>
+          </div>
+          <div class="profile-item">
+            <span class="p-lbl">KYC Verification Status</span>
+            <span class="p-val">
+              @if (isPendingApproval) {
+                <span class="status-pill status-pending">PENDING APPROVAL</span>
+              } @else if (isApproved) {
+                <span class="status-pill status-active">ACTIVE &amp; APPROVED</span>
+              } @else {
+                <span class="status-pill status-rejected">{{ status }}</span>
+              }
+            </span>
+          </div>
+          <div class="profile-item">
+            <span class="p-lbl">Full Legal Name</span>
+            <span class="p-val">{{ currentCustomer?.firstName || user?.name }} {{ currentCustomer?.lastName }}</span>
+          </div>
+          <div class="profile-item">
+            <span class="p-lbl">Date of Birth</span>
+            <span class="p-val">{{ currentCustomer?.dateOfBirth || 'Recorded on file' }}</span>
+          </div>
+          <div class="profile-item">
+            <span class="p-lbl">KYC ID Document</span>
+            <span class="p-val">{{ currentCustomer?.idType || 'National ID' }}: <strong>{{ currentCustomer?.idNumber || 'Verified' }}</strong></span>
+          </div>
+          <div class="profile-item">
+            <span class="p-lbl">Contact Email</span>
+            <span class="p-val">{{ currentCustomer?.email || user?.email }}</span>
+          </div>
+          <div class="profile-item">
+            <span class="p-lbl">Contact Phone</span>
+            <span class="p-val">{{ currentCustomer?.phone || 'Verified' }}</span>
+          </div>
+          <div class="profile-item">
+            <span class="p-lbl">Occupation</span>
+            <span class="p-val">{{ currentCustomer?.occupation || 'Policyholder' }}</span>
+          </div>
+          <div class="profile-item full-width">
+            <span class="p-lbl">Verified Residential Address</span>
+            <span class="p-val">{{ currentCustomer?.address || 'Recorded in database' }}</span>
+          </div>
+          <div class="profile-item">
+            <span class="p-lbl">Emergency Contact</span>
+            <span class="p-val">{{ currentCustomer?.emergencyContactName || 'None' }} ({{ currentCustomer?.emergencyContactPhone || 'None' }})</span>
+          </div>
+          <div class="profile-item">
+            <span class="p-lbl">Application Timestamp</span>
+            <span class="p-val">{{ currentCustomer?.createdAt | date:'medium' }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
+</div>

@@ -1,0 +1,60 @@
+<div class="create-page">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Post Premium Receipt</h1>
+      <p class="page-subtitle">Record verified banking transmission or direct payment entry into policy ledger.</p>
+    </div>
+    <app-button variant="secondary" routerLink="/payments">Back to Payments</app-button>
+  </div>
+
+  <div class="form-wrapper">
+    <app-card title="Payment Ledger Entry">
+      <form [formGroup]="paymentForm" (ngSubmit)="onSubmit()">
+        <div class="form-grid">
+          <div class="form-group full-width">
+            <label for="policyId">Target Policy *</label>
+            <select id="policyId" formControlName="policyId">
+              <option value="" disabled>-- Select Policy --</option>
+              @for (p of dataService.policies(); track p.id) {
+                <option [value]="p.id">{{ p.policyNumber }} - {{ p.customerName }} (${{ p.premiumAmount }})</option>
+              }
+            </select>
+            @if (paymentForm.get('policyId')?.touched && paymentForm.get('policyId')?.invalid) {
+              <span class="field-error">Target policy is required</span>
+            }
+          </div>
+
+          <div class="form-group">
+            <label for="amount">Receipt Amount (USD) *</label>
+            <input id="amount" type="number" step="0.01" formControlName="amount" placeholder="500.00">
+            @if (paymentForm.get('amount')?.touched && paymentForm.get('amount')?.invalid) {
+              <span class="field-error">Valid positive amount required</span>
+            }
+          </div>
+
+          <div class="form-group">
+            <label for="currency">Currency *</label>
+            <select id="currency" formControlName="currency">
+              <option value="USD">USD ($)</option>
+              <option value="EUR">EUR (€)</option>
+              <option value="GBP">GBP (£)</option>
+            </select>
+          </div>
+
+          <div class="form-group full-width">
+            <label for="paymentMethodReference">Settlement Instrument / Masked Reference *</label>
+            <input id="paymentMethodReference" type="text" formControlName="paymentMethodReference" placeholder="e.g. ACH-DEBIT-***4891 or WIRE-FED-***882">
+            @if (paymentForm.get('paymentMethodReference')?.touched && paymentForm.get('paymentMethodReference')?.invalid) {
+              <span class="field-error">Non-sensitive payment reference is required</span>
+            }
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <app-button type="button" variant="secondary" routerLink="/payments">Cancel</app-button>
+          <app-button type="submit" variant="primary" [disabled]="paymentForm.invalid">Post Entry</app-button>
+        </div>
+      </form>
+    </app-card>
+  </div>
+</div>

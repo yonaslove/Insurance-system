@@ -1,0 +1,50 @@
+<div class="payments-page">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Payment Receipts & Reconciliation</h1>
+      <p class="page-subtitle">Track premium collection entries, payment methods, and ledger settlement status.</p>
+    </div>
+    <div class="header-actions">
+      <app-button variant="primary" routerLink="/payments/new">+ Post Payment Entry</app-button>
+    </div>
+  </div>
+
+  <app-card [noPadding]="true">
+    @if (payments().length === 0) {
+      <app-empty-state
+        title="No payment records"
+        message="No payment transactions are recorded in the ledger.">
+        <app-button variant="primary" routerLink="/payments/new">Record First Payment</app-button>
+      </app-empty-state>
+    } @else {
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Receipt Ref</th>
+              <th>Policy Ref</th>
+              <th>Amount (USD)</th>
+              <th>Instrument / Gateway Reference</th>
+              <th>Status</th>
+              <th>Posting Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (p of payments(); track p.id) {
+              <tr>
+                <td><strong>{{ p.paymentReference }}</strong></td>
+                <td>{{ p.policyId }}</td>
+                <td><strong>${{ p.amount.toFixed(2) }}</strong> {{ p.currency }}</td>
+                <td><code>{{ p.paymentMethodReference }}</code></td>
+                <td>
+                  <app-badge [status]="p.status">{{ p.status }}</app-badge>
+                </td>
+                <td>{{ p.paidAt | date:'medium' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </app-card>
+</div>

@@ -1,0 +1,151 @@
+<div class="claims-page">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Claims Adjudication &amp; Settlement Center</h1>
+      <p class="page-subtitle">Adjudicate reported losses, inspect incident evidence, assess damage, and approve settlement payouts.</p>
+    </div>
+    <div class="header-actions">
+      <app-button variant="primary" routerLink="/claims/new">+ Report Loss Claim</app-button>
+    </div>
+  </div>
+
+  @if (successToast) {
+    <div class="toast-banner">
+      <span>✅</span>
+      <span>{{ successToast }}</span>
+      <button type="button" class="close-toast" (click)="successToast = ''">&times;</button>
+    </div>
+  }
+
+  <app-card [noPadding]="true">
+    @if (claims().length === 0) {
+      <app-empty-state
+        title="No incident claims"
+        message="No insurance claims have been registered in the system.">
+        <app-button variant="primary" routerLink="/claims/new">Submit First Claim</app-button>
+      </app-empty-state>
+    } @else {
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Claim ID</th>
+              <th>Policy Ref</th>
+              <th>Incident Date</th>
+              <th>Claimed Damage</th>
+              <th>Approved Settlement</th>
+              <th>Status</th>
+              <th>Adjudication Decision</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (c of claims(); track c.id) {
+              <tr [class.highlight-pending]="c.status === 'SUBMITTED' || c.status === 'UNDER_REVIEW'">
+                <td>
+                  <strong>{{ c.claimNumber }}</strong>
+                  <div class="desc-preview">{{ c.description }}</div>
+                </td>
+                <td><code>{{ c.policyNumber || c.policyId }}</code></td>
+                <td>{{ c.incidentDate | date:'mediumDate' }}</td>
+                <td><strong>${{ c.claimedAmount.toFixed(2) }}</strong></td>
+                <td>
+                  @if (c.approvedAmount) {
+                    <span class="text-success font-bold">${{ c.approvedAmount.toFixed(2) }}</span>
+                  } @else if (c.status === 'REJECTED') {
+                    <span class="text-danger">$0.00 (Declined)</span>
+                  } @else {
+                    <span class="text-muted">Awaiting Decision</span>
+                  }
+                </td>
+                <td>
+                  <app-badge [status]="c.status">{{ c.status }}</app-badge>
+                </td>
+                <td>
+                  @if (c.status === 'SUBMITTED' || c.status === 'UNDER_REVIEW') {
+                    <button 
+                      type="button" 
+                      class="btn-adjudicate" 
+                      (click)="openAdjudication(c)">
+                      ⚖️ Adjudicate Claim
+                    </button>
+                  } @else if (c.status === 'APPROVED') {
+                    <span class="decision-pill decision-approved">✓ Approved (${{ c.approvedAmount?.toFixed(2) }})</span>
+                  } @else if (c.status === 'REJECTED') {
+                    <span class="decision-pill decision-rejected">✕ Rejected</span>
+                  } @else {
+                    <span class="decision-complete">{{ c.status }}</span>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </app-card>
+
+  <!-- Claims Officer Adjudication Inspection Modal -->
+  @if (selectedClaim) {
+    <div class="modal-backdrop" (click)="closeModal()">
+      <div class="modal-card" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <div>
+            <h3>Official Loss Adjudication &amp; Investigation</h3>
+            <span class="modal-sub">Claim Reference: <strong>{{ selectedClaim.claimNumber }}</strong> &bull; Policy: {{ selectedClaim.policyNumber || selectedClaim.policyId }}</span>
+          </div>
+          <button type="button" class="btn-close" (click)="closeModal()">&times;</button>
+        </div>
+
+        <div class="modal-body">
+          <div class="claim-details-box">
+            <div class="detail-item">
+              <span class="lbl">Incident Date</span>
+              <span class="val">{{ selectedClaim.incidentDate | date:'fullDate' }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="lbl">Claimed Loss Amount</span>
+              <span class="val highlight">${{ selectedClaim.claimedAmount.toFixed(2) }} USD</span>
+            </div>
+            <div class="detail-item full-width">
+              <span class="lbl">Incident Description &amp; Evidentiary Findings</span>
+              <div class="desc-box">{{ selectedClaim.description }}</div>
+            </div>
+          </div>
+
+          <div class="adjudication-form">
+            <div class="form-group">
+              <label for="approvedAmt">Approved Settlement Payout Amount (USD) *</label>
+              <input 
+                id="approvedAmt" 
+                name="approvedAmt" 
+                type="number" 
+                step="0.01" 
+                [(ngModel)]="adjudicationAmount" 
+                placeholder="Enter authorized settlement payout" 
+                class="form-control" />
+              <small class="hint-text">Deductibles or coverage sub-limits can be adjusted from the claimed amount ($ {{ selectedClaim.claimedAmount.toFixed(2) }}).</small>
+            </div>
+
+            <div class="form-group">
+              <label for="adjNotes">Adjuster Findings &amp; Reviewer Notes *</label>
+              <textarea 
+                id="adjNotes" 
+                name="adjNotes" 
+                rows="3" 
+                [(ngModel)]="adjudicationNotes" 
+                placeholder="Record inspection findings, repair estimate verifications, police report matches..." 
+                class="form-control"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn-cancel" (click)="closeModal()">Cancel</button>
+          <button type="button" class="btn-decline" (click)="confirmRejection()">✕ Decline / Reject Claim</button>
+          <button type="button" class="btn-approve-claim" (click)="confirmApproval()">✓ Approve Settlement (${{ adjudicationAmount.toFixed(2) }})</button>
+        </div>
+      </div>
+    </div>
+  }
+
+</div>

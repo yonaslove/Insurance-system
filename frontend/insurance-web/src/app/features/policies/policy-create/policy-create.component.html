@@ -1,0 +1,81 @@
+<div class="create-page">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Issue Insurance Policy</h1>
+      <p class="page-subtitle">Bind coverage for an existing customer against an active product contract.</p>
+    </div>
+    <app-button variant="secondary" routerLink="/policies">Back to Policies</app-button>
+  </div>
+
+  <div class="form-wrapper">
+    <app-card title="Underwriting & Coverage Terms">
+      <form [formGroup]="policyForm" (ngSubmit)="onSubmit()">
+        <div class="form-grid">
+          <div class="form-group full-width">
+            <label for="customerId">Select Customer *</label>
+            <select id="customerId" formControlName="customerId">
+              <option value="" disabled>-- Choose Policyholder --</option>
+              @for (c of dataService.customers(); track c.id) {
+                <option [value]="c.id">{{ c.firstName }} {{ c.lastName }} ({{ c.customerNumber }})</option>
+              }
+            </select>
+            @if (policyForm.get('customerId')?.touched && policyForm.get('customerId')?.invalid) {
+              <span class="field-error">Customer selection is required</span>
+            }
+          </div>
+
+          <div class="form-group full-width">
+            <label for="productId">Select Insurance Product *</label>
+            <select id="productId" formControlName="productId">
+              <option value="" disabled>-- Choose Product --</option>
+              @for (p of dataService.products(); track p.id) {
+                <option [value]="p.id">{{ p.name }} ({{ p.code }}) - ${{ p.basePremium }}/mo</option>
+              }
+            </select>
+            @if (policyForm.get('productId')?.touched && policyForm.get('productId')?.invalid) {
+              <span class="field-error">Product selection is required</span>
+            }
+          </div>
+
+          <div class="form-group">
+            <label for="startDate">Coverage Effective Start Date *</label>
+            <input id="startDate" type="date" formControlName="startDate">
+            @if (policyForm.get('startDate')?.touched && policyForm.get('startDate')?.invalid) {
+              <span class="field-error">Start date is required</span>
+            }
+          </div>
+
+          <div class="form-group">
+            <label for="endDate">Coverage Expiration Date *</label>
+            <input id="endDate" type="date" formControlName="endDate">
+            @if (policyForm.get('endDate')?.touched && policyForm.get('endDate')?.invalid) {
+              <span class="field-error">End date is required</span>
+            }
+          </div>
+
+          <div class="form-group">
+            <label for="premiumAmount">Annual / Term Total Premium (USD) *</label>
+            <input id="premiumAmount" type="number" step="0.01" formControlName="premiumAmount" placeholder="1200.00">
+            @if (policyForm.get('premiumAmount')?.touched && policyForm.get('premiumAmount')?.invalid) {
+              <span class="field-error">Valid premium amount required</span>
+            }
+          </div>
+
+          <div class="form-group">
+            <label for="currency">Currency *</label>
+            <select id="currency" formControlName="currency">
+              <option value="USD">USD ($)</option>
+              <option value="EUR">EUR (€)</option>
+              <option value="GBP">GBP (£)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <app-button type="button" variant="secondary" routerLink="/policies">Cancel</app-button>
+          <app-button type="submit" variant="primary" [disabled]="policyForm.invalid">Bind Policy</app-button>
+        </div>
+      </form>
+    </app-card>
+  </div>
+</div>

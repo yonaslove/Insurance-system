@@ -1,0 +1,29 @@
+<header class="topbar">
+  <div class="topbar-search">
+    <span class="search-icon">🔍</span>
+    <input type="text" placeholder="Search policies, customer names, claims..." aria-label="Global search">
+  </div>
+
+  <div class="topbar-actions">
+    <div class="connection-status">
+      <span class="status-indicator"></span>
+      <span class="status-label">Services Healthy</span>
+    </div>
+
+    @if (authService.currentUser(); as user) {
+      <div class="user-profile">
+        <div class="user-avatar">{{ user.name.charAt(0) }}</div>
+        <div class="user-info">
+          <div class="user-name-line">
+            <span class="user-name">{{ user.name }}</span>
+            <span class="role-tag">{{ user.roles[0] }}</span>
+          </div>
+          <span class="user-email">{{ user.email }}</span>
+        </div>
+        <button type="button" class="btn-logout" (click)="authService.logout()" title="Sign Out">
+          <span>🚪 Sign Out</span>
+        </button>
+      </div>
+    }
+  </div>
+</header>

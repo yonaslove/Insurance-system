@@ -1,0 +1,62 @@
+<div class="create-page">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Register New Customer</h1>
+      <p class="page-subtitle">Input validated personal details and billing address for policy enrollment.</p>
+    </div>
+    <app-button variant="secondary" routerLink="/customers">Back to Customers</app-button>
+  </div>
+
+  <div class="form-wrapper">
+    <app-card title="Customer Account Details">
+      <form [formGroup]="customerForm" (ngSubmit)="onSubmit()">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="firstName">First Name *</label>
+            <input id="firstName" type="text" formControlName="firstName" placeholder="e.g. Alexander">
+            @if (customerForm.get('firstName')?.touched && customerForm.get('firstName')?.invalid) {
+              <span class="field-error">First name is required</span>
+            }
+          </div>
+
+          <div class="form-group">
+            <label for="lastName">Last Name *</label>
+            <input id="lastName" type="text" formControlName="lastName" placeholder="e.g. Wright">
+            @if (customerForm.get('lastName')?.touched && customerForm.get('lastName')?.invalid) {
+              <span class="field-error">Last name is required</span>
+            }
+          </div>
+
+          <div class="form-group">
+            <label for="email">Email Address *</label>
+            <input id="email" type="email" formControlName="email" placeholder="e.g. a.wright@example.com">
+            @if (customerForm.get('email')?.touched && customerForm.get('email')?.invalid) {
+              <span class="field-error">Valid email address is required</span>
+            }
+          </div>
+
+          <div class="form-group">
+            <label for="phone">Phone Number *</label>
+            <input id="phone" type="tel" formControlName="phone" placeholder="e.g. +1 (555) 234-5678">
+            @if (customerForm.get('phone')?.touched && customerForm.get('phone')?.invalid) {
+              <span class="field-error">Phone number is required</span>
+            }
+          </div>
+
+          <div class="form-group full-width">
+            <label for="address">Mailing & Risk Address *</label>
+            <textarea id="address" formControlName="address" rows="3" placeholder="Street, Unit, City, State, ZIP"></textarea>
+            @if (customerForm.get('address')?.touched && customerForm.get('address')?.invalid) {
+              <span class="field-error">Address is required</span>
+            }
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <app-button type="button" variant="secondary" routerLink="/customers">Cancel</app-button>
+          <app-button type="submit" variant="primary" [disabled]="customerForm.invalid">Save & Register</app-button>
+        </div>
+      </form>
+    </app-card>
+  </div>
+</div>
