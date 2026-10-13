@@ -60,7 +60,7 @@ Version rule: select compatible Angular, Java, Spring Boot, Keycloak, PostgreSQL
 insurance-management/
 ├── frontend/
 │   └── insurance-web/                 # Angular
-├── services/
+├── backend/
 │   ├── discovery-server/               # Eureka Server
 │   ├── api-gateway/                    # Spring Cloud Gateway; routes + token checks
 │   ├── customer-service/

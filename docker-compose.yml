@@ -43,7 +43,7 @@ services:
 
   discovery-server:
     build:
-      context: ./services/discovery-server
+      context: ./backend/discovery-server
       dockerfile: Dockerfile
     container_name: insurance-discovery-server
     ports:
@@ -53,7 +53,7 @@ services:
 
   api-gateway:
     build:
-      context: ./services/api-gateway
+      context: ./backend/api-gateway
       dockerfile: Dockerfile
     container_name: insurance-api-gateway
     ports:
@@ -68,7 +68,7 @@ services:
 
   customer-service:
     build:
-      context: ./services/customer-service
+      context: ./backend/customer-service
       dockerfile: Dockerfile
     container_name: insurance-customer-service
     ports:
@@ -91,7 +91,7 @@ services:
 
   product-service:
     build:
-      context: ./services/product-service
+      context: ./backend/product-service
       dockerfile: Dockerfile
     container_name: insurance-product-service
     ports:
@@ -114,7 +114,7 @@ services:
 
   policy-service:
     build:
-      context: ./services/policy-service
+      context: ./backend/policy-service
       dockerfile: Dockerfile
     container_name: insurance-policy-service
     ports:
@@ -137,7 +137,7 @@ services:
 
   claims-service:
     build:
-      context: ./services/claims-service
+      context: ./backend/claims-service
       dockerfile: Dockerfile
     container_name: insurance-claims-service
     ports:
@@ -160,7 +160,7 @@ services:
 
   payment-service:
     build:
-      context: ./services/payment-service
+      context: ./backend/payment-service
       dockerfile: Dockerfile
     container_name: insurance-payment-service
     ports:

@@ -90,7 +90,7 @@ insurance/
 │       ├── Dockerfile                             # Multi-stage container build (Node 20 + NGINX)
 │       └── package.json                           # Dependencies & scripts
 │
-├── services/                                      # Microservices Backend (Spring Boot 3.3 / Java 21)
+├── backend/                                       # Microservices Backend (Spring Boot 3.3 / Java 21)
 │   ├── discovery-server/                          # Netflix Eureka Service Discovery (Port 8761)
 │   ├── api-gateway/                               # Spring Cloud Gateway (Port 8080)
 │   │   └── src/main/resources/application.yml     # Reverse proxy routes (/api/v1/auth/**, etc.)
