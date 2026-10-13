@@ -1,8 +1,16 @@
 {
   "realm": "insurance",
   "enabled": true,
-  "displayName": "InsurEdge Enterprise Realm",
-  "sslRequired": "external",
+  "sslRequired": "none",
+  "browserSecurityHeaders": {
+    "xFrameOptions": "SAMEORIGIN",
+    "contentSecurityPolicy": "frame-src 'self'; frame-ancestors 'self'; object-src 'none';",
+    "contentSecurityPolicyReportOnly": "",
+    "xContentTypeOptions": "nosniff",
+    "xRobotsTag": "none",
+    "xXSSProtection": "1; mode=block",
+    "strictTransportSecurity": "max-age=0"
+  },
   "registrationAllowed": true,
   "roles": {
     "realm": [
