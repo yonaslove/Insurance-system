@@ -1,4 +1,4 @@
-import { Component, computed } from '@angular/core';
+import { Component, OnInit, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { InsuranceDataService } from '../../../core/services/insurance-data.service';
@@ -14,8 +14,17 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
   templateUrl: './payment-list.component.html',
   styleUrl: './payment-list.component.css'
 })
-export class PaymentListComponent {
+export class PaymentListComponent implements OnInit {
   payments = computed(() => this.dataService.payments());
 
   constructor(public dataService: InsuranceDataService) {}
+
+  ngOnInit(): void {
+    this.refresh();
+  }
+
+  refresh(): void {
+    this.dataService.loadPayments().subscribe({ error: () => {} });
+    this.dataService.loadPolicies().subscribe({ error: () => {} });
+  }
 }

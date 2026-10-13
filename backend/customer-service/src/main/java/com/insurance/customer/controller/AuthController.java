@@ -42,9 +42,13 @@ public class AuthController {
     }
 
     @GetMapping("/users")
-    @Operation(summary = "Admin operation: List all actors and users in the system")
-    public ResponseEntity<List<UserDto>> listUsers() {
-        return ResponseEntity.ok(authUserService.listUsers());
+    @Operation(summary = "Admin operation: List all actors and users in the system (optionally filtered by role)")
+    public ResponseEntity<List<UserDto>> listUsers(@RequestParam(required = false) String role) {
+        List<UserDto> users = authUserService.listUsers();
+        if (role != null && !role.isBlank() && !role.equalsIgnoreCase("ALL")) {
+            users = users.stream().filter(u -> role.equalsIgnoreCase(u.role())).toList();
+        }
+        return ResponseEntity.ok(users);
     }
 
     @GetMapping("/actors")

@@ -18,9 +18,11 @@ export class UserManagementComponent implements OnInit {
   private insuranceData = inject(InsuranceDataService);
 
   users: UserAccount[] = [];
+  allUsers: UserAccount[] = [];
   selectedRoleFilter: string = 'ALL';
   showCreateModal = false;
   submitting = false;
+  loading = false;
   successMessage = '';
   modalError = '';
 
@@ -35,24 +37,46 @@ export class UserManagementComponent implements OnInit {
   };
 
   ngOnInit() {
-    this.loadUsers();
+    this.loadUsers('ALL');
   }
 
-  loadUsers() {
-    this.authService.getUsers().subscribe(list => {
+  loadUsers(role: string = this.selectedRoleFilter) {
+    this.loading = true;
+    this.authService.getUsers(role).subscribe(list => {
       this.users = list;
+      this.loading = false;
     });
+
+    // Also keep allUsers cached for counting
+    if (role !== 'ALL' && this.allUsers.length === 0) {
+      this.authService.getUsers('ALL').subscribe(all => {
+        this.allUsers = all;
+      });
+    } else if (role === 'ALL') {
+      this.allUsers = this.users;
+    }
+  }
+
+  filterByRole(role: string) {
+    this.selectedRoleFilter = role;
+    this.loadUsers(role);
+  }
+
+  refreshData() {
+    this.loadUsers(this.selectedRoleFilter);
   }
 
   get filteredUsers(): UserAccount[] {
-    if (this.selectedRoleFilter === 'ALL') {
-      return this.users;
-    }
-    return this.users.filter(u => u.role === this.selectedRoleFilter);
+    return this.users;
   }
 
   getCountForRole(role: string): number {
-    return this.users.filter(u => u.role === role).length;
+    const source = this.allUsers.length > 0 ? this.allUsers : this.users;
+    return source.filter(u => u.role === role).length;
+  }
+
+  get totalCount(): number {
+    return this.allUsers.length > 0 ? this.allUsers.length : this.users.length;
   }
 
   getTargetWorkspace(role: UserRole): string {

@@ -1,4 +1,4 @@
-import { Component, computed } from '@angular/core';
+import { Component, OnInit, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { InsuranceDataService } from '../../core/services/insurance-data.service';
@@ -13,12 +13,16 @@ import { ButtonComponent } from '../../shared/components/button/button.component
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.css'
 })
-export class DashboardComponent {
+export class DashboardComponent implements OnInit {
   summary = computed(() => this.dataService.dashboardSummary());
 
   constructor(private dataService: InsuranceDataService) {}
 
-  refresh() {
-    // Re-evaluates signals
+  ngOnInit(): void {
+    this.refresh();
+  }
+
+  refresh(): void {
+    this.dataService.loadAll();
   }
 }

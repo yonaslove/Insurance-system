@@ -1,4 +1,4 @@
-import { Component, signal, computed, inject } from '@angular/core';
+import { Component, OnInit, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -16,7 +16,7 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
   templateUrl: './customer-list.component.html',
   styleUrl: './customer-list.component.css'
 })
-export class CustomerListComponent {
+export class CustomerListComponent implements OnInit {
   public dataService = inject(InsuranceDataService);
 
   searchTerm = signal('');
@@ -26,6 +26,14 @@ export class CustomerListComponent {
   rejectionReason = '';
   showRejectModal = false;
   successMessage = '';
+
+  ngOnInit() {
+    this.loadCustomers();
+  }
+
+  loadCustomers() {
+    this.dataService.loadCustomers().subscribe({ error: () => {} });
+  }
 
   pendingCount = computed(() => 
     this.dataService.customers().filter(c => c.status === 'PENDING_APPROVAL').length
@@ -58,11 +66,13 @@ export class CustomerListComponent {
 
   setTab(tab: 'ALL' | 'PENDING_APPROVAL' | 'ACTIVE' | 'REJECTED') {
     this.selectedStatusTab.set(tab);
+    this.loadCustomers();
   }
 
   resetFilter() {
     this.searchTerm.set('');
     this.selectedStatusTab.set('ALL');
+    this.loadCustomers();
   }
 
   openKycReview(customer: Customer) {

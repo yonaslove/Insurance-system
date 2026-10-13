@@ -50,61 +50,57 @@ export class InsuranceDataService {
   }
 
   loadAll(): void {
-    this.loadCustomers();
-    this.loadProducts();
-    this.loadPolicies();
-    this.loadClaims();
-    this.loadPayments();
+    this.loadCustomers().subscribe({ error: () => {} });
+    this.loadProducts().subscribe({ error: () => {} });
+    this.loadPolicies().subscribe({ error: () => {} });
+    this.loadClaims().subscribe({ error: () => {} });
+    this.loadPayments().subscribe({ error: () => {} });
   }
 
-  loadCustomers(): void {
-    this.http.get<any>('/api/v1/customers').subscribe({
-      next: (res) => {
+  loadCustomers(status?: string): Observable<any> {
+    const params = status && status !== 'ALL' ? `?status=${encodeURIComponent(status)}` : '';
+    return this.http.get<any>(`/api/v1/customers${params}`).pipe(
+      tap((res) => {
         const list = res.content ? res.content : (Array.isArray(res) ? res : []);
         this.customersSignal.set(list);
-      },
-      error: () => {}
-    });
+      })
+    );
   }
 
-  loadProducts(): void {
-    this.http.get<any>('/api/v1/products').subscribe({
-      next: (res) => {
+  loadProducts(): Observable<any> {
+    return this.http.get<any>('/api/v1/products').pipe(
+      tap((res) => {
         const list = res.content ? res.content : (Array.isArray(res) ? res : []);
         this.productsSignal.set(list);
-      },
-      error: () => {}
-    });
+      })
+    );
   }
 
-  loadPolicies(): void {
-    this.http.get<any>('/api/v1/policies').subscribe({
-      next: (res) => {
+  loadPolicies(): Observable<any> {
+    return this.http.get<any>('/api/v1/policies').pipe(
+      tap((res) => {
         const list = res.content ? res.content : (Array.isArray(res) ? res : []);
         this.policiesSignal.set(list);
-      },
-      error: () => {}
-    });
+      })
+    );
   }
 
-  loadClaims(): void {
-    this.http.get<any>('/api/v1/claims').subscribe({
-      next: (res) => {
+  loadClaims(): Observable<any> {
+    return this.http.get<any>('/api/v1/claims').pipe(
+      tap((res) => {
         const list = res.content ? res.content : (Array.isArray(res) ? res : []);
         this.claimsSignal.set(list);
-      },
-      error: () => {}
-    });
+      })
+    );
   }
 
-  loadPayments(): void {
-    this.http.get<any>('/api/v1/payments').subscribe({
-      next: (res) => {
+  loadPayments(): Observable<any> {
+    return this.http.get<any>('/api/v1/payments').pipe(
+      tap((res) => {
         const list = res.content ? res.content : (Array.isArray(res) ? res : []);
         this.paymentsSignal.set(list);
-      },
-      error: () => {}
-    });
+      })
+    );
   }
 
   addCustomer(req: CustomerCreateRequest): Customer {

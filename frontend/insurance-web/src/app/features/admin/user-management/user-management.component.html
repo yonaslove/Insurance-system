@@ -24,7 +24,7 @@
   <div class="stats-grid">
     <div class="stat-card">
       <span class="stat-lbl">Total Provisioned Actors</span>
-      <span class="stat-num">{{ users.length }}</span>
+      <span class="stat-num">{{ totalCount }}</span>
     </div>
     <div class="stat-card">
       <span class="stat-lbl">Underwriters & Actuaries</span>
@@ -40,56 +40,64 @@
     </div>
   </div>
 
-  <!-- Filter Pills -->
+  <!-- Filter Pills with live network dispatch -->
   <div class="filter-bar">
     <button 
       type="button" 
       class="filter-pill" 
       [class.active]="selectedRoleFilter === 'ALL'"
-      (click)="selectedRoleFilter = 'ALL'">
-      All Actors ({{ users.length }})
+      (click)="filterByRole('ALL')">
+      All Actors ({{ totalCount }})
     </button>
     <button 
       type="button" 
       class="filter-pill" 
       [class.active]="selectedRoleFilter === 'ADMIN'"
-      (click)="selectedRoleFilter = 'ADMIN'">
+      (click)="filterByRole('ADMIN')">
       Administrators
     </button>
     <button 
       type="button" 
       class="filter-pill" 
       [class.active]="selectedRoleFilter === 'UNDERWRITER'"
-      (click)="selectedRoleFilter = 'UNDERWRITER'">
+      (click)="filterByRole('UNDERWRITER')">
       Underwriters
     </button>
     <button 
       type="button" 
       class="filter-pill" 
       [class.active]="selectedRoleFilter === 'CLAIMS_OFFICER'"
-      (click)="selectedRoleFilter = 'CLAIMS_OFFICER'">
+      (click)="filterByRole('CLAIMS_OFFICER')">
       Claims Officers
     </button>
     <button 
       type="button" 
       class="filter-pill" 
       [class.active]="selectedRoleFilter === 'FINANCE_OFFICER'"
-      (click)="selectedRoleFilter = 'FINANCE_OFFICER'">
+      (click)="filterByRole('FINANCE_OFFICER')">
       Finance Officers
     </button>
     <button 
       type="button" 
       class="filter-pill" 
       [class.active]="selectedRoleFilter === 'CUSTOMER_SERVICE'"
-      (click)="selectedRoleFilter = 'CUSTOMER_SERVICE'">
+      (click)="filterByRole('CUSTOMER_SERVICE')">
       Customer Service
     </button>
     <button 
       type="button" 
       class="filter-pill" 
       [class.active]="selectedRoleFilter === 'CUSTOMER'"
-      (click)="selectedRoleFilter = 'CUSTOMER'">
+      (click)="filterByRole('CUSTOMER')">
       Customers
+    </button>
+
+    <button 
+      type="button" 
+      class="filter-pill btn-refresh-network" 
+      style="margin-left: auto; background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0;"
+      (click)="refreshData()">
+      🔄 Reload Network Data
     </button>
   </div>
 

@@ -1,4 +1,4 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, OnInit, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -16,10 +16,19 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
   templateUrl: './claim-list.component.html',
   styleUrl: './claim-list.component.css'
 })
-export class ClaimListComponent {
+export class ClaimListComponent implements OnInit {
   public dataService = inject(InsuranceDataService);
 
   claims = computed(() => this.dataService.claims());
+
+  ngOnInit(): void {
+    this.refresh();
+  }
+
+  refresh(): void {
+    this.dataService.loadClaims().subscribe({ error: () => {} });
+    this.dataService.loadPolicies().subscribe({ error: () => {} });
+  }
 
   selectedClaim: Claim | null = null;
   adjudicationAmount = 0;

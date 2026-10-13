@@ -156,9 +156,14 @@ export class AuthService {
   /**
    * Administrator operation: Load all real system actors from database (/api/v1/auth/users).
    */
-  getUsers(): Observable<UserAccount[]> {
-    return this.http.get<UserAccount[]>('/api/v1/auth/users').pipe(
-      tap(users => this.usersListSignal.set(users)),
+  getUsers(role?: string): Observable<UserAccount[]> {
+    const params = role && role !== 'ALL' ? `?role=${encodeURIComponent(role)}` : '';
+    return this.http.get<UserAccount[]>(`/api/v1/auth/users${params}`).pipe(
+      tap(users => {
+        if (!role || role === 'ALL') {
+          this.usersListSignal.set(users);
+        }
+      }),
       catchError(() => of(this.usersListSignal()))
     );
   }
