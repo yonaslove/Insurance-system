@@ -1,6 +1,6 @@
 @echo off
 echo =======================================================
-echo    PUSHING 28 COMMITS TO GITHUB REPOSITORY
+echo    PUSHING 30 COMMITS TO GITHUB REPOSITORY
 echo    Repository: https://github.com/yonaslove/Insurance-system.git
 echo =======================================================
 echo.
