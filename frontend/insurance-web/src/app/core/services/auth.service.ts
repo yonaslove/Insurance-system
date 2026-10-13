@@ -18,8 +18,8 @@ export class AuthService {
   private http = inject(HttpClient);
   private router = inject(Router);
 
-  // Initial Administrator reference (matches Flyway V2 seed)
-  private readonly ADMIN_FALLBACK: UserAccount = {
+  // Initial Administrator seed reference for offline development / test specs
+  private readonly ADMIN_SEED: UserAccount = {
     id: '10000000-0000-0000-0000-000000000001',
     username: 'admin',
     email: 'admin@insurance-corp.com',
@@ -29,7 +29,7 @@ export class AuthService {
     createdAt: new Date().toISOString()
   };
 
-  private usersListSignal = signal<UserAccount[]>([this.ADMIN_FALLBACK]);
+  private usersListSignal = signal<UserAccount[]>([]);
   private currentUserSignal = signal<UserProfile | null>(this.getInitialUser());
 
   currentUser = computed(() => this.currentUserSignal());
@@ -48,6 +48,14 @@ export class AuthService {
     return null;
   }
 
+  getToken(): string | null {
+    try {
+      return localStorage.getItem('insuredge_auth_token');
+    } catch {
+      return null;
+    }
+  }
+
   hasRole(role: UserRole): boolean {
     const user = this.currentUserSignal();
     return user ? user.roles.includes(role) : false;
@@ -59,7 +67,8 @@ export class AuthService {
   }
 
   /**
-   * Log in with real database credentials against /api/v1/auth/login.
+   * Log in with real credentials against /api/v1/auth/login.
+   * Stores real Keycloak JWT access token in localStorage for authorization headers.
    */
   login(usernameOrEmail: string, password: string): Observable<{ user: UserProfile; redirectUrl: string }> {
     const trimmedInput = usernameOrEmail.trim();
@@ -78,24 +87,19 @@ export class AuthService {
           customerId: res.customerId,
           status: res.status
         };
+
+        if (res.token) {
+          try {
+            localStorage.setItem('insuredge_auth_token', res.token);
+          } catch {
+            // Ignored
+          }
+        }
+
         this.setCurrentUser(profile);
       }),
       catchError((httpErr) => {
-        // Fallback for initial bootstrap administrator if microservice container is warming up
-        if (trimmedInput.toLowerCase() === 'admin' && password === 'Admin123!') {
-          const profile: UserProfile = {
-            id: this.ADMIN_FALLBACK.id,
-            username: this.ADMIN_FALLBACK.username,
-            name: this.ADMIN_FALLBACK.fullName,
-            email: this.ADMIN_FALLBACK.email,
-            roles: ['ADMIN'],
-            customerId: undefined,
-            status: 'ACTIVE'
-          };
-          this.setCurrentUser(profile);
-          return of({ user: profile, redirectUrl: '/dashboard' });
-        }
-        const msg = httpErr?.error?.message || 'Invalid username/email or password.';
+        const msg = httpErr?.error?.message || httpErr?.message || 'Invalid username/email or password.';
         return throwError(() => new Error(msg));
       })
     );
@@ -116,6 +120,15 @@ export class AuthService {
           customerId: res.customerId,
           status: res.status || 'PENDING_APPROVAL'
         };
+
+        if (res.token) {
+          try {
+            localStorage.setItem('insuredge_auth_token', res.token);
+          } catch {
+            // Ignored
+          }
+        }
+
         this.setCurrentUser(profile);
       }),
       catchError((httpErr) => {
@@ -126,7 +139,7 @@ export class AuthService {
   }
 
   /**
-   * Administrator operation: Add any actor into the real database (/api/v1/auth/users).
+   * Administrator operation: Add any actor into the real database and Keycloak (/api/v1/auth/users).
    */
   adminCreateUser(request: AdminCreateUserRequest): Observable<UserAccount> {
     return this.http.post<UserAccount>('/api/v1/auth/users', request).pipe(
@@ -163,6 +176,7 @@ export class AuthService {
     this.currentUserSignal.set(null);
     try {
       localStorage.removeItem('insuredge_auth_user');
+      localStorage.removeItem('insuredge_auth_token');
     } catch {
       // Ignored
     }
@@ -171,12 +185,13 @@ export class AuthService {
 
   loginAsAdmin() {
     const profile: UserProfile = {
-      id: this.ADMIN_FALLBACK.id,
-      username: this.ADMIN_FALLBACK.username,
-      name: this.ADMIN_FALLBACK.fullName,
-      email: this.ADMIN_FALLBACK.email,
+      id: this.ADMIN_SEED.id,
+      username: this.ADMIN_SEED.username,
+      name: this.ADMIN_SEED.fullName,
+      email: this.ADMIN_SEED.email,
       roles: ['ADMIN'],
-      customerId: undefined
+      customerId: undefined,
+      status: 'ACTIVE'
     };
     this.setCurrentUser(profile);
   }

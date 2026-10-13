@@ -81,10 +81,17 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-insurance_password}
       EUREKA_HOST: discovery-server
       EUREKA_PORT: 8761
+      KEYCLOAK_URL: http://keycloak:8080
+      KEYCLOAK_REALM: insurance
+      KEYCLOAK_CLIENT_ID: insurance-web
+      KEYCLOAK_ADMIN_USERNAME: ${KEYCLOAK_ADMIN:-admin}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin}
     depends_on:
       postgres:
         condition: service_healthy
       discovery-server:
+        condition: service_started
+      keycloak:
         condition: service_started
     networks:
       - insurance-net

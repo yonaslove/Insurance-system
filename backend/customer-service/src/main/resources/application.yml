@@ -34,3 +34,11 @@ management:
     web:
       exposure:
         include: health,info,flyway
+
+keycloak:
+  auth-server-url: ${KEYCLOAK_URL:http://localhost:8180}
+  realm: ${KEYCLOAK_REALM:insurance}
+  client-id: ${KEYCLOAK_CLIENT_ID:insurance-web}
+  admin-username: ${KEYCLOAK_ADMIN_USERNAME:admin}
+  admin-password: ${KEYCLOAK_ADMIN_PASSWORD:admin}
+

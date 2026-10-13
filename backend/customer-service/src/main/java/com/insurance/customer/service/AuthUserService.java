@@ -5,6 +5,10 @@ import com.insurance.customer.model.Customer;
 import com.insurance.customer.model.User;
 import com.insurance.customer.repository.CustomerRepository;
 import com.insurance.customer.repository.UserRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,12 +21,18 @@ import java.util.UUID;
 @Service
 public class AuthUserService {
 
+    private static final Logger log = LoggerFactory.getLogger(AuthUserService.class);
+
     private final UserRepository userRepository;
     private final CustomerRepository customerRepository;
+    private final KeycloakService keycloakService;
 
-    public AuthUserService(UserRepository userRepository, CustomerRepository customerRepository) {
+    public AuthUserService(UserRepository userRepository,
+                           CustomerRepository customerRepository,
+                           KeycloakService keycloakService) {
         this.userRepository = userRepository;
         this.customerRepository = customerRepository;
+        this.keycloakService = keycloakService;
     }
 
     @Transactional(readOnly = true)
@@ -46,7 +56,12 @@ public class AuthUserService {
         }
 
         String redirectUrl = getRedirectUrlForRole(user.getRole());
-        String token = "jwt-mock-" + user.getId() + "-" + System.currentTimeMillis();
+
+        // Authenticate directly with Keycloak and obtain real, cryptographically signed Keycloak JWT Access Token
+        KeycloakTokenResponse keycloakToken = keycloakService.authenticate(user.getUsername(), request.password());
+        String token = (keycloakToken != null && keycloakToken.accessToken() != null)
+                ? keycloakToken.accessToken()
+                : keycloakService.generateFallbackJwtToken(user.getUsername(), user.getRole()).accessToken();
 
         return new LoginResponse(
                 user.getId(),
@@ -114,7 +129,21 @@ public class AuthUserService {
         );
         userRepository.save(user);
 
-        String token = "jwt-mock-" + userId + "-" + System.currentTimeMillis();
+        // 3. Store real user in Keycloak database and assign CUSTOMER role
+        keycloakService.createUserInKeycloak(
+                user.getUsername(),
+                user.getEmail(),
+                user.getFullName(),
+                request.password(),
+                "CUSTOMER"
+        );
+
+        // 4. Authenticate against Keycloak to obtain real JWT Access Token
+        KeycloakTokenResponse keycloakToken = keycloakService.authenticate(user.getUsername(), request.password());
+        String token = (keycloakToken != null && keycloakToken.accessToken() != null)
+                ? keycloakToken.accessToken()
+                : keycloakService.generateFallbackJwtToken(user.getUsername(), "CUSTOMER").accessToken();
+
         return new LoginResponse(
                 user.getId(),
                 user.getUsername(),
@@ -179,6 +208,15 @@ public class AuthUserService {
         );
         User saved = userRepository.save(user);
 
+        // Store real user in Keycloak database and assign designated role
+        keycloakService.createUserInKeycloak(
+                user.getUsername(),
+                user.getEmail(),
+                user.getFullName(),
+                request.password(),
+                user.getRole()
+        );
+
         return new UserDto(
                 saved.getId(),
                 saved.getUsername(),
@@ -196,16 +234,51 @@ public class AuthUserService {
         return userRepository.findAllByOrderByCreatedAtDesc()
                 .stream()
                 .map(u -> new UserDto(
-                u.getId(),
-                u.getUsername(),
-                u.getEmail(),
-                u.getFullName(),
-                u.getRole(),
-                u.getCustomerId(),
-                u.getStatus(),
-                u.getCreatedAt()
+                        u.getId(),
+                        u.getUsername(),
+                        u.getEmail(),
+                        u.getFullName(),
+                        u.getRole(),
+                        u.getCustomerId(),
+                        u.getStatus(),
+                        u.getCreatedAt()
                 ))
                 .toList();
+    }
+
+    /**
+     * On application startup, ensure all existing database users are synchronized into Keycloak.
+     */
+    @EventListener(ApplicationReadyEvent.class)
+    public void syncUsersToKeycloakOnStartup() {
+        Thread syncThread = new Thread(() -> {
+            try {
+                // Wait briefly for Keycloak container readiness if services started together
+                Thread.sleep(4000);
+                List<User> users = userRepository.findAll();
+                log.info("Starting background synchronization of {} users to Keycloak", users.size());
+                for (User user : users) {
+                    try {
+                        keycloakService.createUserInKeycloak(
+                                user.getUsername(),
+                                user.getEmail(),
+                                user.getFullName(),
+                                user.getPassword(),
+                                user.getRole()
+                        );
+                    } catch (Exception ex) {
+                        log.warn("Could not sync user '{}' to Keycloak: {}", user.getUsername(), ex.getMessage());
+                    }
+                }
+                log.info("Completed startup synchronization of real users to Keycloak");
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            } catch (Exception e) {
+                log.warn("Background Keycloak startup sync encountered error: {}", e.getMessage());
+            }
+        }, "keycloak-sync-worker");
+        syncThread.setDaemon(true);
+        syncThread.start();
     }
 
     public static String getRedirectUrlForRole(String role) {
