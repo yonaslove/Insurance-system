@@ -217,6 +217,9 @@ services:
     depends_on:
       - api-gateway
       - keycloak
+    networks:
+      - insurance-net
+
   mailpit:
     image: axllent/mailpit:latest
     container_name: insurance-mailpit
