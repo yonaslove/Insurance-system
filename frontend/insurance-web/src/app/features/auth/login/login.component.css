@@ -267,6 +267,34 @@
   font-size: 1.1rem;
 }
 
+.mail-hint-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background-color: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  color: #166534;
+  line-height: 1.35;
+}
+
+.mail-hint-icon {
+  font-size: 1rem;
+}
+
+.mail-link {
+  color: #15803d;
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+.mail-link:hover {
+  color: #166534;
+}
+
 .spinner {
   width: 18px;
   height: 18px;

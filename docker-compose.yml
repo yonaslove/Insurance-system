@@ -88,12 +88,21 @@ services:
       KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin}
       KEYCLOAK_ISSUER_URI: http://keycloak:8080/realms/insurance
       KEYCLOAK_JWK_SET_URI: http://keycloak:8080/realms/insurance/protocol/openid-connect/certs
+      SPRING_MAIL_HOST: ${SPRING_MAIL_HOST:-mailpit}
+      SPRING_MAIL_PORT: ${SPRING_MAIL_PORT:-1025}
+      SPRING_MAIL_USERNAME: ${SPRING_MAIL_USERNAME:-}
+      SPRING_MAIL_PASSWORD: ${SPRING_MAIL_PASSWORD:-}
+      SPRING_MAIL_SMTP_AUTH: ${SPRING_MAIL_SMTP_AUTH:-false}
+      SPRING_MAIL_SMTP_STARTTLS_ENABLE: ${SPRING_MAIL_SMTP_STARTTLS_ENABLE:-false}
+      SPRING_MAIL_SMTP_STARTTLS_REQUIRED: ${SPRING_MAIL_SMTP_STARTTLS_REQUIRED:-false}
     depends_on:
       postgres:
         condition: service_healthy
       discovery-server:
         condition: service_started
       keycloak:
+        condition: service_started
+      mailpit:
         condition: service_started
     networks:
       - insurance-net
@@ -208,6 +217,12 @@ services:
     depends_on:
       - api-gateway
       - keycloak
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: insurance-mailpit
+    ports:
+      - "8025:8025"
+      - "1025:1025"
     networks:
       - insurance-net
 

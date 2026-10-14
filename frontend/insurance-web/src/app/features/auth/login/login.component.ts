@@ -103,8 +103,13 @@ export class LoginComponent implements OnInit {
       next: (res) => {
         this.loading = false;
         this.maskedEmail = res.email || this.forgotIdentifier.trim();
-        this.infoMessage = res.message || 'Verification code sent to your email.';
         this.mode = 'reset';
+        if (res.resetCode) {
+          this.resetCode = res.resetCode;
+          this.infoMessage = `${res.message} (Verification Code: ${res.resetCode})`;
+        } else {
+          this.infoMessage = res.message || 'Verification code sent to your email.';
+        }
       },
       error: (err) => {
         this.loading = false;

@@ -15,16 +15,32 @@ public class EmailService {
 
     private final JavaMailSender mailSender;
 
-    @Value("${spring.mail.username:support@insurance-corp.com}")
-    private String fromEmail;
+    @Value("${spring.mail.username:}")
+    private String mailUsername;
+
+    @Value("${app.mail.from:support@insurance-system.com}")
+    private String configuredFromEmail;
 
     public EmailService(@Autowired(required = false) JavaMailSender mailSender) {
         this.mailSender = mailSender;
     }
 
+    private String getSenderEmail() {
+        if (mailUsername != null && !mailUsername.isBlank()) {
+            return mailUsername.trim();
+        }
+        if (configuredFromEmail != null && !configuredFromEmail.isBlank()) {
+            return configuredFromEmail.trim();
+        }
+        return "support@insurance-system.com";
+    }
+
     public void sendPasswordResetEmail(String toEmail, String fullName, String resetCode, String resetLink) {
+        String fromSender = getSenderEmail();
+
         log.info("================================================================================");
         log.info("                       PASSWORD RESET NOTIFICATION                              ");
+        log.info("From       : {}", fromSender);
         log.info("Recipient  : {} <{}>", fullName, toEmail);
         log.info("Subject    : Password Reset Verification Code - Insurance System");
         log.info("Reset Code : >>> {} <<<", resetCode);
@@ -35,12 +51,12 @@ public class EmailService {
         if (mailSender != null) {
             try {
                 SimpleMailMessage message = new SimpleMailMessage();
-                message.setFrom(fromEmail);
+                message.setFrom(fromSender);
                 message.setTo(toEmail);
                 message.setSubject("Password Reset Verification Code - Insurance System");
                 message.setText(String.format(
                         "Dear %s,\n\n" +
-                        "We received a request to reset your password for your Insurance System account.\n\n" +
+                        "We received a request to reset the password for your Insurance System account.\n\n" +
                         "Your 6-digit password reset verification code is:\n\n" +
                         "      %s\n\n" +
                         "This code will expire in 15 minutes.\n\n" +
