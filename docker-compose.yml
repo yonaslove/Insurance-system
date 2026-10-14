@@ -86,6 +86,8 @@ services:
       KEYCLOAK_CLIENT_ID: insurance-web
       KEYCLOAK_ADMIN_USERNAME: ${KEYCLOAK_ADMIN:-admin}
       KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin}
+      KEYCLOAK_ISSUER_URI: http://keycloak:8080/realms/insurance
+      KEYCLOAK_JWK_SET_URI: http://keycloak:8080/realms/insurance/protocol/openid-connect/certs
     depends_on:
       postgres:
         condition: service_healthy
@@ -111,6 +113,8 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-insurance_password}
       EUREKA_HOST: discovery-server
       EUREKA_PORT: 8761
+      KEYCLOAK_ISSUER_URI: http://keycloak:8080/realms/insurance
+      KEYCLOAK_JWK_SET_URI: http://keycloak:8080/realms/insurance/protocol/openid-connect/certs
     depends_on:
       postgres:
         condition: service_healthy
@@ -134,6 +138,8 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-insurance_password}
       EUREKA_HOST: discovery-server
       EUREKA_PORT: 8761
+      KEYCLOAK_ISSUER_URI: http://keycloak:8080/realms/insurance
+      KEYCLOAK_JWK_SET_URI: http://keycloak:8080/realms/insurance/protocol/openid-connect/certs
     depends_on:
       postgres:
         condition: service_healthy
@@ -157,6 +163,8 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-insurance_password}
       EUREKA_HOST: discovery-server
       EUREKA_PORT: 8761
+      KEYCLOAK_ISSUER_URI: http://keycloak:8080/realms/insurance
+      KEYCLOAK_JWK_SET_URI: http://keycloak:8080/realms/insurance/protocol/openid-connect/certs
     depends_on:
       postgres:
         condition: service_healthy
@@ -180,6 +188,8 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-insurance_password}
       EUREKA_HOST: discovery-server
       EUREKA_PORT: 8761
+      KEYCLOAK_ISSUER_URI: http://keycloak:8080/realms/insurance
+      KEYCLOAK_JWK_SET_URI: http://keycloak:8080/realms/insurance/protocol/openid-connect/certs
     depends_on:
       postgres:
         condition: service_healthy
@@ -197,6 +207,7 @@ services:
       - "4200:80"
     depends_on:
       - api-gateway
+      - keycloak
     networks:
       - insurance-net
 
