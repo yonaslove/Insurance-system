@@ -15,6 +15,7 @@ import { ButtonComponent } from '../../../shared/components/button/button.compon
 })
 export class ClaimCreateComponent {
   claimForm: FormGroup;
+  errorMessage = '';
 
   constructor(
     private fb: FormBuilder,
@@ -31,8 +32,11 @@ export class ClaimCreateComponent {
 
   onSubmit() {
     if (this.claimForm.valid) {
-      this.dataService.addClaim(this.claimForm.value);
-      this.router.navigate(['/claims']);
+      this.errorMessage = '';
+      this.dataService.addClaim(this.claimForm.value).subscribe({
+        next: () => this.router.navigate(['/claims']),
+        error: (err) => { this.errorMessage = err?.error?.message || 'Failed to submit claim. Please try again.'; }
+      });
     }
   }
 }

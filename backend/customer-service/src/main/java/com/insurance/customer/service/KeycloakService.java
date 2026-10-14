@@ -14,9 +14,6 @@ import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.server.ResponseStatusException;
 
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
-import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.*;
 
@@ -84,16 +81,28 @@ public class KeycloakService {
             }
             throw new ResponseStatusException(ex.getStatusCode(), "Authentication provider error: " + ex.getStatusText());
         } catch (ResourceAccessException ex) {
-            log.warn("Keycloak server at {} is temporarily unreachable. Generating fallback cryptographic signed JWT: {}",
-                    authServerUrl, ex.getMessage());
-            return generateFallbackJwtToken(usernameOrEmail, "USER");
+            log.error("Keycloak server at {} is unreachable: {}", authServerUrl, ex.getMessage());
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,
+                    "Identity provider is temporarily unavailable. Please try again shortly.");
         }
     }
 
     /**
-     * Creates a real user inside Keycloak's database, sets password credentials, and assigns the designated realm role.
+     * Creates (or re-synchronizes) a user inside Keycloak and assigns the designated realm role,
+     * resetting the password of an already-existing Keycloak user to the supplied value.
      */
     public String createUserInKeycloak(String username, String email, String fullName, String password, String role) {
+        return createUserInKeycloak(username, email, fullName, password, role, true);
+    }
+
+    /**
+     * Creates (or re-synchronizes) a user inside Keycloak and assigns the designated realm role.
+     *
+     * @param resetExistingPassword when true, an existing Keycloak user has their password reset to the
+     *                              supplied value; when false an existing user is left untouched (used by
+     *                              startup reconciliation so live credentials are never overwritten).
+     */
+    public String createUserInKeycloak(String username, String email, String fullName, String password, String role, boolean resetExistingPassword) {
         String adminToken = getAdminAccessToken();
         if (adminToken == null) {
             log.warn("Cannot create user in Keycloak because Admin API is unreachable. Skipping remote Keycloak sync.");
@@ -110,12 +119,6 @@ public class KeycloakService {
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setBearerAuth(adminToken);
 
-        Map<String, Object> credentialMap = Map.of(
-                "type", "password",
-                "value", password,
-                "temporary", false
-        );
-
         Map<String, Object> userPayload = new HashMap<>();
         userPayload.put("username", username);
         userPayload.put("email", email);
@@ -123,7 +126,13 @@ public class KeycloakService {
         userPayload.put("lastName", lastName);
         userPayload.put("enabled", true);
         userPayload.put("emailVerified", true);
-        userPayload.put("credentials", List.of(credentialMap));
+        if (password != null && !password.isBlank()) {
+            userPayload.put("credentials", List.of(Map.of(
+                    "type", "password",
+                    "value", password,
+                    "temporary", false
+            )));
+        }
 
         HttpEntity<Map<String, Object>> request = new HttpEntity<>(userPayload, headers);
 
@@ -142,7 +151,7 @@ public class KeycloakService {
             if (ex.getStatusCode() == HttpStatus.CONFLICT) {
                 log.info("User '{}' already exists in Keycloak realm. Resolving existing Keycloak user ID.", username);
                 userId = findUserIdByUsername(username, adminToken);
-                if (userId != null) {
+                if (userId != null && resetExistingPassword && password != null && !password.isBlank()) {
                     resetKeycloakUserPassword(userId, password, adminToken);
                 }
             } else {
@@ -196,6 +205,28 @@ public class KeycloakService {
         } catch (Exception ex) {
             log.warn("Could not map role '{}' to Keycloak user ID {}: {}", roleName, userId, ex.getMessage());
         }
+    }
+
+    /**
+     * Public method to reset a user's password in Keycloak.
+     * If user is not present in Keycloak, provisions them with the new password.
+     */
+    public boolean resetPassword(String username, String email, String fullName, String role, String newPassword) {
+        String adminToken = getAdminAccessToken();
+        if (adminToken == null) {
+            log.error("Cannot reset password: Keycloak Admin API token could not be obtained");
+            return false;
+        }
+
+        String userId = findUserIdByUsername(username, adminToken);
+        if (userId == null) {
+            log.info("User '{}' not found in Keycloak during reset. Provisioning user into Keycloak.", username);
+            userId = createUserInKeycloak(username, email, fullName, newPassword, role, true);
+            return userId != null;
+        }
+
+        resetKeycloakUserPassword(userId, newPassword, adminToken);
+        return true;
     }
 
     /**
@@ -296,48 +327,5 @@ public class KeycloakService {
         String first = parts[0];
         String last = parts.length > 1 ? parts[1] : first;
         return new String[]{first, last};
-    }
-
-    /**
-     * Fallback standard cryptographic signed JWT token generator (RS256/HMAC-SHA256)
-     * used only when Keycloak server is temporarily offline during container boot sequence.
-     */
-    public KeycloakTokenResponse generateFallbackJwtToken(String username, String role) {
-        long now = System.currentTimeMillis() / 1000;
-        long exp = now + 3600;
-
-        String headerJson = "{\"alg\":\"HS256\",\"typ\":\"JWT\"}";
-        String payloadJson = String.format(
-                "{\"sub\":\"%s\",\"preferred_username\":\"%s\",\"roles\":[\"%s\"],\"iat\":%d,\"exp\":%d,\"iss\":\"%s/realms/%s\"}",
-                UUID.randomUUID(), username, role, now, exp, authServerUrl, realm
-        );
-
-        String b64Header = Base64.getUrlEncoder().withoutPadding().encodeToString(headerJson.getBytes(StandardCharsets.UTF_8));
-        String b64Payload = Base64.getUrlEncoder().withoutPadding().encodeToString(payloadJson.getBytes(StandardCharsets.UTF_8));
-        String signingInput = b64Header + "." + b64Payload;
-
-        String signature = signHmacSha256(signingInput, "InsurEdge-Enterprise-Secret-Key-2026-Security-Token-Key");
-        String jwt = signingInput + "." + signature;
-
-        return new KeycloakTokenResponse(
-                jwt,
-                3600L,
-                7200L,
-                jwt,
-                "Bearer",
-                UUID.randomUUID().toString(),
-                "openid profile email"
-        );
-    }
-
-    private String signHmacSha256(String data, String key) {
-        try {
-            Mac mac = Mac.getInstance("HmacSHA256");
-            mac.init(new SecretKeySpec(key.getBytes(StandardCharsets.UTF_8), "HmacSHA256"));
-            byte[] rawHmac = mac.doFinal(data.getBytes(StandardCharsets.UTF_8));
-            return Base64.getUrlEncoder().withoutPadding().encodeToString(rawHmac);
-        } catch (Exception e) {
-            return Base64.getUrlEncoder().withoutPadding().encodeToString(data.getBytes(StandardCharsets.UTF_8));
-        }
     }
 }

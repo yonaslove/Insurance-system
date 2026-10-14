@@ -10,6 +10,7 @@ describe('TopbarComponent', () => {
   let authService: AuthService;
 
   beforeEach(async () => {
+    localStorage.clear();
     await TestBed.configureTestingModule({
       imports: [TopbarComponent],
       providers: [
@@ -19,8 +20,15 @@ describe('TopbarComponent', () => {
       ]
     }).compileComponents();
 
+    localStorage.setItem('insuredge_auth_user', JSON.stringify({
+      id: '10000000-0000-0000-0000-000000000001',
+      username: 'admin',
+      name: 'System Administrator',
+      email: 'admin@insurance-corp.com',
+      roles: ['ADMIN'],
+      status: 'ACTIVE'
+    }));
     authService = TestBed.inject(AuthService);
-    authService.loginAsAdmin();
 
     fixture = TestBed.createComponent(TopbarComponent);
     component = fixture.componentInstance;

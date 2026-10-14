@@ -14,8 +14,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import com.insurance.customer.model.PasswordResetToken;
+import com.insurance.customer.repository.PasswordResetTokenRepository;
+
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -26,24 +30,40 @@ public class AuthUserService {
     private final UserRepository userRepository;
     private final CustomerRepository customerRepository;
     private final KeycloakService keycloakService;
+    private final PasswordResetTokenRepository tokenRepository;
+    private final EmailService emailService;
 
     public AuthUserService(UserRepository userRepository,
                            CustomerRepository customerRepository,
-                           KeycloakService keycloakService) {
+                           KeycloakService keycloakService,
+                           PasswordResetTokenRepository tokenRepository,
+                           EmailService emailService) {
         this.userRepository = userRepository;
         this.customerRepository = customerRepository;
         this.keycloakService = keycloakService;
+        this.tokenRepository = tokenRepository;
+        this.emailService = emailService;
     }
 
-    @Transactional(readOnly = true)
+    @Transactional(noRollbackFor = ResponseStatusException.class)
     public LoginResponse login(LoginRequest request) {
         String identifier = request.usernameOrEmail().trim();
         User user = userRepository.findByUsername(identifier)
                 .or(() -> userRepository.findByEmail(identifier))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid username/email or password"));
 
-        if (!user.getPassword().equals(request.password())) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid username/email or password");
+        // 1. Check if account is currently locked due to failed attempts
+        if (user.getLockedUntil() != null) {
+            if (user.getLockedUntil().isAfter(OffsetDateTime.now())) {
+                long minutesLeft = java.time.Duration.between(OffsetDateTime.now(), user.getLockedUntil()).toMinutes() + 1;
+                throw new ResponseStatusException(HttpStatus.LOCKED,
+                        String.format("Account is temporarily locked due to 5 consecutive failed login attempts. Please try again in %d minute(s) or use 'Forgot Password' to reset your credentials.", minutesLeft));
+            } else {
+                // Lockout duration has expired; automatically release lock
+                user.setLockedUntil(null);
+                user.setFailedLoginAttempts(0);
+                userRepository.saveAndFlush(user);
+            }
         }
 
         if ("REJECTED".equalsIgnoreCase(user.getStatus())) {
@@ -57,11 +77,42 @@ public class AuthUserService {
 
         String redirectUrl = getRedirectUrlForRole(user.getRole());
 
-        // Authenticate directly with Keycloak and obtain real, cryptographically signed Keycloak JWT Access Token
-        KeycloakTokenResponse keycloakToken = keycloakService.authenticate(user.getUsername(), request.password());
-        String token = (keycloakToken != null && keycloakToken.accessToken() != null)
-                ? keycloakToken.accessToken()
-                : keycloakService.generateFallbackJwtToken(user.getUsername(), user.getRole()).accessToken();
+        // 2. Keycloak is the sole credential authority: validate the password there and obtain a signed JWT.
+        KeycloakTokenResponse keycloakToken;
+        try {
+            keycloakToken = keycloakService.authenticate(user.getUsername(), request.password());
+        } catch (ResponseStatusException ex) {
+            if (ex.getStatusCode() == HttpStatus.UNAUTHORIZED) {
+                int attempts = (user.getFailedLoginAttempts() != null ? user.getFailedLoginAttempts() : 0) + 1;
+                user.setFailedLoginAttempts(attempts);
+                if (attempts >= 5) {
+                    user.setLockedUntil(OffsetDateTime.now().plusMinutes(15));
+                    userRepository.saveAndFlush(user);
+                    log.warn("Account '{}' locked for 15 minutes due to 5 consecutive failed login attempts", user.getUsername());
+                    throw new ResponseStatusException(HttpStatus.LOCKED,
+                            "Account is temporarily locked for 15 minutes due to 5 consecutive failed login attempts. Please try again in 15 minutes or use 'Forgot Password'.");
+                } else {
+                    userRepository.saveAndFlush(user);
+                    int remaining = 5 - attempts;
+                    throw new ResponseStatusException(HttpStatus.UNAUTHORIZED,
+                            String.format("Invalid username/email or password. %d attempt(s) remaining before account lockout.", remaining));
+                }
+            }
+            throw ex;
+        }
+
+        if (keycloakToken == null || keycloakToken.accessToken() == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid username/email or password");
+        }
+
+        // 3. Reset failed login attempts on successful authentication
+        if ((user.getFailedLoginAttempts() != null && user.getFailedLoginAttempts() > 0) || user.getLockedUntil() != null) {
+            user.setFailedLoginAttempts(0);
+            user.setLockedUntil(null);
+            userRepository.save(user);
+        }
+
+        String token = keycloakToken.accessToken();
 
         return new LoginResponse(
                 user.getId(),
@@ -89,8 +140,7 @@ public class AuthUserService {
         }
 
         // 1. Create customer entity with PENDING_APPROVAL status and full KYC details
-        long customerCount = customerRepository.count();
-        String customerNumber = String.format("CUST-2026-%03d", customerCount + 1);
+        String customerNumber = String.format("CUST-2026-%03d", customerRepository.nextCustomerNumber());
         UUID customerId = UUID.randomUUID();
 
         Customer customer = new Customer(
@@ -114,12 +164,11 @@ public class AuthUserService {
         customer.setEmergencyContactPhone(request.emergencyContactPhone());
         customerRepository.save(customer);
 
-        // 2. Create user credentials with PENDING_APPROVAL status
+        // 2. Create user account (no password stored locally; Keycloak owns credentials)
         UUID userId = UUID.randomUUID();
         User user = new User(
                 userId,
                 request.username().trim(),
-                request.password(),
                 request.email().trim(),
                 request.firstName().trim() + " " + request.lastName().trim(),
                 "CUSTOMER",
@@ -140,9 +189,10 @@ public class AuthUserService {
 
         // 4. Authenticate against Keycloak to obtain real JWT Access Token
         KeycloakTokenResponse keycloakToken = keycloakService.authenticate(user.getUsername(), request.password());
-        String token = (keycloakToken != null && keycloakToken.accessToken() != null)
-                ? keycloakToken.accessToken()
-                : keycloakService.generateFallbackJwtToken(user.getUsername(), "CUSTOMER").accessToken();
+        if (keycloakToken == null || keycloakToken.accessToken() == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unable to issue access token for the new customer");
+        }
+        String token = keycloakToken.accessToken();
 
         return new LoginResponse(
                 user.getId(),
@@ -173,8 +223,7 @@ public class AuthUserService {
                     .stream().findFirst().orElse(null);
 
             if (customer == null) {
-                long customerCount = customerRepository.count();
-                String customerNumber = String.format("CUST-2026-%03d", customerCount + 1);
+                String customerNumber = String.format("CUST-2026-%03d", customerRepository.nextCustomerNumber());
                 String[] names = request.fullName().trim().split("\\s+", 2);
                 String firstName = names[0];
                 String lastName = names.length > 1 ? names[1] : "Customer";
@@ -198,7 +247,6 @@ public class AuthUserService {
         User user = new User(
                 UUID.randomUUID(),
                 request.username().trim(),
-                request.password(),
                 request.email().trim(),
                 request.fullName().trim(),
                 request.role().trim().toUpperCase(),
@@ -263,8 +311,9 @@ public class AuthUserService {
                                 user.getUsername(),
                                 user.getEmail(),
                                 user.getFullName(),
-                                user.getPassword(),
-                                user.getRole()
+                                null,
+                                user.getRole(),
+                                false
                         );
                     } catch (Exception ex) {
                         log.warn("Could not sync user '{}' to Keycloak: {}", user.getUsername(), ex.getMessage());
@@ -292,5 +341,84 @@ public class AuthUserService {
             case "CUSTOMER" -> "/portal";
             default -> "/dashboard";
         };
+    }
+
+    @Transactional
+    public ForgotPasswordResponse forgotPassword(ForgotPasswordRequest request) {
+        String identifier = request.usernameOrEmail().trim();
+        User user = userRepository.findByUsername(identifier)
+                .or(() -> userRepository.findByEmail(identifier))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No account found matching username or email: " + identifier));
+
+        // Generate 6-digit verification code
+        String resetCode = String.format("%06d", (int) (Math.random() * 900000) + 100000);
+        OffsetDateTime expiry = OffsetDateTime.now().plusMinutes(15);
+
+        PasswordResetToken resetToken = new PasswordResetToken(
+                UUID.randomUUID(),
+                user,
+                resetCode,
+                expiry,
+                OffsetDateTime.now()
+        );
+        tokenRepository.save(resetToken);
+
+        String resetLink = "http://localhost:4200/login?code=" + resetCode + "&email=" + user.getEmail();
+        emailService.sendPasswordResetEmail(user.getEmail(), user.getFullName(), resetCode, resetLink);
+
+        String masked = maskEmail(user.getEmail());
+        return new ForgotPasswordResponse(
+                "A 6-digit verification code has been dispatched to " + masked,
+                masked,
+                resetCode
+        );
+    }
+
+    @Transactional
+    public Map<String, String> resetPassword(ResetPasswordRequest request) {
+        String tokenVal = request.token().trim();
+        PasswordResetToken resetToken = tokenRepository.findByToken(tokenVal)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid verification code. Please check your email or request a new code."));
+
+        if (resetToken.isUsed()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "This verification code has already been used. Please request a new one.");
+        }
+
+        if (resetToken.getExpiryDate().isBefore(OffsetDateTime.now())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "This verification code has expired. Verification codes are valid for 15 minutes.");
+        }
+
+        User user = resetToken.getUser();
+
+        // 1. Reset password in Keycloak
+        boolean success = keycloakService.resetPassword(user.getUsername(), user.getEmail(), user.getFullName(), user.getRole(), request.newPassword());
+        if (!success) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to update credentials in Keycloak identity provider.");
+        }
+
+        // 2. Invalidate reset token
+        resetToken.setUsed(true);
+        tokenRepository.save(resetToken);
+
+        // 3. Unlock account immediately and reset failed attempts counter
+        user.setFailedLoginAttempts(0);
+        user.setLockedUntil(null);
+        user.setUpdatedAt(OffsetDateTime.now());
+        userRepository.save(user);
+
+        log.info("Password successfully reset for user '{}', account unlocked and restored to active state", user.getUsername());
+
+        return Map.of("message", "Password has been successfully updated! Your account is unlocked and you may now sign in.");
+    }
+
+    private String maskEmail(String email) {
+        if (email == null || !email.contains("@")) return email;
+        int atIndex = email.indexOf('@');
+        String name = email.substring(0, atIndex);
+        String domain = email.substring(atIndex);
+        if (name.length() <= 2) {
+            return name.charAt(0) + "***" + domain;
+        }
+        return name.charAt(0) + "***" + name.charAt(name.length() - 1) + domain;
     }
 }

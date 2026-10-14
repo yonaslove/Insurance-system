@@ -22,4 +22,7 @@ public interface CustomerRepository extends JpaRepository<Customer, UUID> {
            "LOWER(c.email) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
            "LOWER(c.customerNumber) LIKE LOWER(CONCAT('%', :query, '%'))")
     Page<Customer> searchCustomers(@Param("query") String query, Pageable pageable);
+
+    @Query(value = "SELECT nextval('customer_number_seq')", nativeQuery = true)
+    long nextCustomerNumber();
 }

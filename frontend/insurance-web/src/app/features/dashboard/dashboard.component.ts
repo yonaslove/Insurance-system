@@ -24,5 +24,6 @@ export class DashboardComponent implements OnInit {
 
   refresh(): void {
     this.dataService.loadAll();
+    this.dataService.loadDashboardSummary().subscribe({ error: () => {} });
   }
 }

@@ -213,6 +213,60 @@
   color: #1e40af;
 }
 
+.alert-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex: 1;
+}
+
+.btn-link-action {
+  background: none;
+  border: none;
+  padding: 0;
+  color: #b91c1c;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+  text-align: left;
+  font-size: 0.88rem;
+  margin-top: 0.25rem;
+}
+
+.btn-link-action:hover {
+  color: #991b1b;
+}
+
+.card-header {
+  margin-bottom: 1.75rem;
+  text-align: center;
+}
+
+.card-title {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 0.5rem 0;
+  letter-spacing: -0.02em;
+}
+
+.card-subtitle {
+  font-size: 0.92rem;
+  color: #6b7280;
+  margin: 0;
+  line-height: 1.45;
+}
+
+.single-center {
+  justify-content: center !important;
+}
+
+.code-input {
+  letter-spacing: 0.2em;
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
 .spinner {
   width: 18px;
   height: 18px;

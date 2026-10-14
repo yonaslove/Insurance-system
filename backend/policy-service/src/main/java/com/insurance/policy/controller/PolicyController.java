@@ -12,8 +12,10 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -42,8 +44,23 @@ public class PolicyController {
     }
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'UNDERWRITER')")
     @Operation(summary = "Issue a new policy")
     public ResponseEntity<PolicyDto> createPolicy(@Valid @RequestBody PolicyCreateRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(policyService.createPolicy(request));
+    }
+
+    @PostMapping("/{id}/renew")
+    @PreAuthorize("hasAnyRole('ADMIN', 'UNDERWRITER')")
+    @Operation(summary = "Renew a policy by extending its coverage term")
+    public ResponseEntity<PolicyDto> renewPolicy(@PathVariable UUID id) {
+        return ResponseEntity.ok(policyService.renewPolicy(id));
+    }
+
+    @PostMapping("/{id}/status")
+    @PreAuthorize("hasAnyRole('ADMIN', 'UNDERWRITER')")
+    @Operation(summary = "Transition a policy to a new lifecycle status")
+    public ResponseEntity<PolicyDto> updateStatus(@PathVariable UUID id, @RequestBody Map<String, String> body) {
+        return ResponseEntity.ok(policyService.updateStatus(id, body.get("status")));
     }
 }

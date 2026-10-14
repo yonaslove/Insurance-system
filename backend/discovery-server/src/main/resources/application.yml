@@ -9,7 +9,7 @@ eureka:
   instance:
     hostname: discovery-server
   server:
-    enable-self-preservation: false
+    enable-self-preservation: true
     eviction-interval-timer-in-ms: 5000
   client:
     register-with-eureka: false

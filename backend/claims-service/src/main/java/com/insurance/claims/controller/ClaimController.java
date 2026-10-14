@@ -13,6 +13,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -43,12 +44,14 @@ public class ClaimController {
     }
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'CLAIMS_OFFICER', 'CUSTOMER')")
     @Operation(summary = "Submit new loss claim against a policy")
     public ResponseEntity<ClaimDto> createClaim(@Valid @RequestBody ClaimCreateRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(claimService.createClaim(request));
     }
 
     @PostMapping("/{id}/decision")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CLAIMS_OFFICER')")
     @Operation(summary = "Record adjuster approval or rejection decision")
     public ResponseEntity<ClaimDto> decideClaim(
             @PathVariable UUID id,

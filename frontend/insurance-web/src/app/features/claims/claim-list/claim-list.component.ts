@@ -34,6 +34,7 @@ export class ClaimListComponent implements OnInit {
   adjudicationAmount = 0;
   adjudicationNotes = '';
   successToast = '';
+  errorToast = '';
 
   openAdjudication(claim: Claim) {
     this.selectedClaim = claim;
@@ -48,27 +49,35 @@ export class ClaimListComponent implements OnInit {
   confirmApproval() {
     if (!this.selectedClaim) return;
     const claim = this.selectedClaim;
+    this.errorToast = '';
 
     this.dataService.decideClaim(claim.id, {
       status: 'APPROVED',
       approvedAmount: this.adjudicationAmount,
       reviewerNotes: this.adjudicationNotes
+    }).subscribe({
+      next: () => {
+        this.successToast = `Claim "${claim.claimNumber}" approved for $${this.adjudicationAmount.toFixed(2)} settlement!`;
+        this.closeModal();
+      },
+      error: (err) => { this.errorToast = err?.error?.message || 'Failed to approve claim.'; }
     });
-
-    this.successToast = `Claim "${claim.claimNumber}" approved for $${this.adjudicationAmount.toFixed(2)} settlement!`;
-    this.closeModal();
   }
 
   confirmRejection() {
     if (!this.selectedClaim) return;
     const claim = this.selectedClaim;
+    this.errorToast = '';
 
     this.dataService.decideClaim(claim.id, {
       status: 'REJECTED',
       reviewerNotes: this.adjudicationNotes || 'Incident falls outside covered perils under standard policy terms.'
+    }).subscribe({
+      next: () => {
+        this.successToast = `Claim "${claim.claimNumber}" has been officially rejected.`;
+        this.closeModal();
+      },
+      error: (err) => { this.errorToast = err?.error?.message || 'Failed to reject claim.'; }
     });
-
-    this.successToast = `Claim "${claim.claimNumber}" has been officially rejected.`;
-    this.closeModal();
   }
 }

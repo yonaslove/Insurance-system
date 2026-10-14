@@ -15,9 +15,6 @@ public class User {
     @Column(nullable = false, unique = true, length = 50)
     private String username;
 
-    @Column(nullable = false, length = 255)
-    private String password;
-
     @Column(nullable = false, unique = true, length = 255)
     private String email;
 
@@ -36,6 +33,12 @@ public class User {
     @Column(name = "rejection_reason", columnDefinition = "TEXT")
     private String rejectionReason;
 
+    @Column(name = "failed_login_attempts", nullable = false)
+    private Integer failedLoginAttempts = 0;
+
+    @Column(name = "locked_until")
+    private OffsetDateTime lockedUntil;
+
     @Column(name = "created_at", nullable = false)
     private OffsetDateTime createdAt;
 
@@ -44,10 +47,9 @@ public class User {
 
     public User() {}
 
-    public User(UUID id, String username, String password, String email, String fullName, String role, UUID customerId, String status, OffsetDateTime createdAt) {
+    public User(UUID id, String username, String email, String fullName, String role, UUID customerId, String status, OffsetDateTime createdAt) {
         this.id = id;
         this.username = username;
-        this.password = password;
         this.email = email;
         this.fullName = fullName;
         this.role = role;
@@ -61,9 +63,6 @@ public class User {
 
     public String getUsername() { return username; }
     public void setUsername(String username) { this.username = username; }
-
-    public String getPassword() { return password; }
-    public void setPassword(String password) { this.password = password; }
 
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
@@ -82,6 +81,12 @@ public class User {
 
     public String getRejectionReason() { return rejectionReason; }
     public void setRejectionReason(String rejectionReason) { this.rejectionReason = rejectionReason; }
+
+    public Integer getFailedLoginAttempts() { return failedLoginAttempts != null ? failedLoginAttempts : 0; }
+    public void setFailedLoginAttempts(Integer failedLoginAttempts) { this.failedLoginAttempts = failedLoginAttempts; }
+
+    public OffsetDateTime getLockedUntil() { return lockedUntil; }
+    public void setLockedUntil(OffsetDateTime lockedUntil) { this.lockedUntil = lockedUntil; }
 
     public OffsetDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(OffsetDateTime createdAt) { this.createdAt = createdAt; }

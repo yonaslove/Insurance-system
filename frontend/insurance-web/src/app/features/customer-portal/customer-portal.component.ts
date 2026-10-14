@@ -154,10 +154,14 @@ export class CustomerPortalComponent implements OnInit {
       currency: 'USD'
     };
 
-    this.insuranceData.addPolicy(req);
-    this.successMessage = `Policy for ${prod?.name || 'Insurance'} issued successfully! You are now covered.`;
-    this.activeTab = 'policies';
-    this.selectedProductId = '';
+    this.insuranceData.addPolicy(req).subscribe({
+      next: () => {
+        this.successMessage = `Policy for ${prod?.name || 'Insurance'} issued successfully! You are now covered.`;
+        this.activeTab = 'policies';
+        this.selectedProductId = '';
+      },
+      error: (err) => { this.policyError = err?.error?.message || 'Failed to issue policy. Please try again.'; }
+    });
   }
 
   submitClaim() {
@@ -182,18 +186,22 @@ export class CustomerPortalComponent implements OnInit {
       claimedAmount: this.newClaim.claimedAmount
     };
 
-    this.insuranceData.addClaim(payload);
-    this.successMessage = `Claim submitted successfully! Reference has entered the Claims Officer adjudication queue for loss verification.`;
-    this.activeTab = 'claims';
+    this.insuranceData.addClaim(payload).subscribe({
+      next: () => {
+        this.successMessage = `Claim submitted successfully! Reference has entered the Claims Officer adjudication queue for loss verification.`;
+        this.activeTab = 'claims';
 
-    // Reset claim form
-    this.newClaim = {
-      policyId: '',
-      incidentDate: new Date().toISOString().split('T')[0],
-      description: '',
-      claimedAmount: 0
-    };
-    this.incidentLocation = '';
-    this.policeReportNumber = '';
+        // Reset claim form
+        this.newClaim = {
+          policyId: '',
+          incidentDate: new Date().toISOString().split('T')[0],
+          description: '',
+          claimedAmount: 0
+        };
+        this.incidentLocation = '';
+        this.policeReportNumber = '';
+      },
+      error: (err) => { this.claimError = err?.error?.message || 'Failed to submit claim. Please try again.'; }
+    });
   }
 }

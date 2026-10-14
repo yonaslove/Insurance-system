@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { InsuranceDataService } from '../../../core/services/insurance-data.service';
+import { PaymentCreateRequest } from '../../../core/models/payment.model';
 import { CardComponent } from '../../../shared/components/card/card.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 
@@ -15,6 +16,8 @@ import { ButtonComponent } from '../../../shared/components/button/button.compon
 })
 export class PaymentCreateComponent {
   paymentForm: FormGroup;
+  errorMessage = '';
+  private idempotencyKey = this.newIdempotencyKey();
 
   constructor(
     private fb: FormBuilder,
@@ -29,10 +32,28 @@ export class PaymentCreateComponent {
     });
   }
 
+  private newIdempotencyKey(): string {
+    const cryptoObj = (globalThis as any).crypto;
+    if (cryptoObj && typeof cryptoObj.randomUUID === 'function') {
+      return cryptoObj.randomUUID();
+    }
+    return `pay-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  }
+
   onSubmit() {
     if (this.paymentForm.valid) {
-      this.dataService.addPayment(this.paymentForm.value);
-      this.router.navigate(['/payments']);
+      this.errorMessage = '';
+      const payload: PaymentCreateRequest = {
+        ...this.paymentForm.value,
+        idempotencyKey: this.idempotencyKey
+      };
+      this.dataService.addPayment(payload).subscribe({
+        next: () => {
+          this.idempotencyKey = this.newIdempotencyKey();
+          this.router.navigate(['/payments']);
+        },
+        error: (err) => { this.errorMessage = err?.error?.message || 'Failed to record payment. Please try again.'; }
+      });
     }
   }
 }

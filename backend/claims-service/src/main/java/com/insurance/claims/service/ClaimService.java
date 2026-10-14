@@ -1,10 +1,12 @@
 package com.insurance.claims.service;
 
+import com.insurance.claims.client.PolicyClient;
 import com.insurance.claims.dto.ClaimCreateRequest;
 import com.insurance.claims.dto.ClaimDecisionRequest;
 import com.insurance.claims.dto.ClaimDto;
 import com.insurance.claims.model.Claim;
 import com.insurance.claims.repository.ClaimRepository;
+import feign.FeignException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -20,9 +22,11 @@ import java.util.UUID;
 public class ClaimService {
 
     private final ClaimRepository claimRepository;
+    private final PolicyClient policyClient;
 
-    public ClaimService(ClaimRepository claimRepository) {
+    public ClaimService(ClaimRepository claimRepository, PolicyClient policyClient) {
         this.claimRepository = claimRepository;
+        this.policyClient = policyClient;
     }
 
     @Transactional(readOnly = true)
@@ -45,8 +49,9 @@ public class ClaimService {
 
     @Transactional
     public ClaimDto createClaim(ClaimCreateRequest request) {
-        long count = claimRepository.count();
-        String claimNumber = String.format("CLM-2026-%03d", 400 + count + 1);
+        assertPolicyExists(request.policyId());
+
+        String claimNumber = String.format("CLM-2026-%03d", claimRepository.nextClaimNumber());
 
         Claim claim = new Claim(
                 UUID.randomUUID(),
@@ -84,6 +89,16 @@ public class ClaimService {
         claim.setUpdatedAt(OffsetDateTime.now());
 
         return toDto(claimRepository.save(claim));
+    }
+
+    private void assertPolicyExists(UUID policyId) {
+        try {
+            policyClient.getPolicy(policyId);
+        } catch (FeignException.NotFound ex) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unknown policy: " + policyId);
+        } catch (FeignException ex) {
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Policy service is currently unavailable");
+        }
     }
 
     private ClaimDto toDto(Claim c) {

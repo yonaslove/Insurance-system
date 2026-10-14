@@ -17,6 +17,14 @@
     </div>
   }
 
+  @if (errorToast) {
+    <div class="toast-banner toast-error">
+      <span>⚠️</span>
+      <span>{{ errorToast }}</span>
+      <button type="button" class="close-toast" (click)="errorToast = ''">&times;</button>
+    </div>
+  }
+
   <app-card [noPadding]="true">
     @if (claims().length === 0) {
       <app-empty-state

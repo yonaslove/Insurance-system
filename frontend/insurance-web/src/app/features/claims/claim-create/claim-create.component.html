@@ -49,6 +49,10 @@
           </div>
         </div>
 
+        @if (errorMessage) {
+          <div class="form-error">{{ errorMessage }}</div>
+        }
+
         <div class="form-actions">
           <app-button type="button" variant="secondary" routerLink="/claims">Cancel</app-button>
           <app-button type="submit" variant="primary" [disabled]="claimForm.invalid">Submit Claim for Review</app-button>

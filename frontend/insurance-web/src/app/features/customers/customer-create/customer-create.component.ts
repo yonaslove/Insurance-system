@@ -15,6 +15,7 @@ import { ButtonComponent } from '../../../shared/components/button/button.compon
 })
 export class CustomerCreateComponent {
   customerForm: FormGroup;
+  errorMessage = '';
 
   constructor(
     private fb: FormBuilder,
@@ -32,8 +33,11 @@ export class CustomerCreateComponent {
 
   onSubmit() {
     if (this.customerForm.valid) {
-      this.dataService.addCustomer(this.customerForm.value);
-      this.router.navigate(['/customers']);
+      this.errorMessage = '';
+      this.dataService.addCustomer(this.customerForm.value).subscribe({
+        next: () => this.router.navigate(['/customers']),
+        error: (err) => { this.errorMessage = err?.error?.message || 'Failed to register customer. Please try again.'; }
+      });
     }
   }
 }

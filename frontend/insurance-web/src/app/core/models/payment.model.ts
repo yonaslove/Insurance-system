@@ -17,4 +17,5 @@ export interface PaymentCreateRequest {
   amount: number;
   currency: string;
   paymentMethodReference: string;
+  idempotencyKey?: string;
 }

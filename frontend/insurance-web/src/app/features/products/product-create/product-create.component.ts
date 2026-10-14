@@ -15,6 +15,7 @@ import { ButtonComponent } from '../../../shared/components/button/button.compon
 })
 export class ProductCreateComponent {
   productForm: FormGroup;
+  errorMessage = '';
 
   constructor(
     private fb: FormBuilder,
@@ -33,8 +34,11 @@ export class ProductCreateComponent {
 
   onSubmit() {
     if (this.productForm.valid) {
-      this.dataService.addProduct(this.productForm.value);
-      this.router.navigate(['/products']);
+      this.errorMessage = '';
+      this.dataService.addProduct(this.productForm.value).subscribe({
+        next: () => this.router.navigate(['/products']),
+        error: (err) => { this.errorMessage = err?.error?.message || 'Failed to create product. Please try again.'; }
+      });
     }
   }
 }

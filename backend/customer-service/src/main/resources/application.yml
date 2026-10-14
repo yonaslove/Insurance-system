@@ -21,6 +21,17 @@ spring:
     enabled: true
     baseline-on-migrate: true
     validate-on-migrate: false
+  mail:
+    host: ${SPRING_MAIL_HOST:localhost}
+    port: ${SPRING_MAIL_PORT:1025}
+    username: ${SPRING_MAIL_USERNAME:}
+    password: ${SPRING_MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: false
+          starttls:
+            enable: false
 
 eureka:
   client:
@@ -41,4 +52,6 @@ keycloak:
   client-id: ${KEYCLOAK_CLIENT_ID:insurance-web}
   admin-username: ${KEYCLOAK_ADMIN_USERNAME:admin}
   admin-password: ${KEYCLOAK_ADMIN_PASSWORD:admin}
+  issuer-uri: ${KEYCLOAK_ISSUER_URI:http://keycloak:8080/realms/insurance}
+  jwk-set-uri: ${KEYCLOAK_JWK_SET_URI:http://keycloak:8080/realms/insurance/protocol/openid-connect/certs}
 

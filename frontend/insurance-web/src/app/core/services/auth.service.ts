@@ -18,17 +18,6 @@ export class AuthService {
   private http = inject(HttpClient);
   private router = inject(Router);
 
-  // Initial Administrator seed reference for offline development / test specs
-  private readonly ADMIN_SEED: UserAccount = {
-    id: '10000000-0000-0000-0000-000000000001',
-    username: 'admin',
-    email: 'admin@insurance-corp.com',
-    fullName: 'System Administrator',
-    role: 'ADMIN',
-    status: 'ACTIVE',
-    createdAt: new Date().toISOString()
-  };
-
   private usersListSignal = signal<UserAccount[]>([]);
   private currentUserSignal = signal<UserProfile | null>(this.getInitialUser());
 
@@ -99,7 +88,7 @@ export class AuthService {
         this.setCurrentUser(profile);
       }),
       catchError((httpErr) => {
-        const msg = httpErr?.error?.message || httpErr?.message || 'Invalid username/email or password.';
+        const msg = httpErr?.error?.message || httpErr?.error?.detail || httpErr?.message || 'Invalid username/email or password.';
         return throwError(() => new Error(msg));
       })
     );
@@ -133,6 +122,35 @@ export class AuthService {
       }),
       catchError((httpErr) => {
         const msg = httpErr?.error?.message || 'Customer registration failed. Username or email may already be registered.';
+        return throwError(() => new Error(msg));
+      })
+    );
+  }
+
+  /**
+   * Request password reset verification code by email or username.
+   */
+  forgotPassword(usernameOrEmail: string): Observable<{ message: string; email?: string; resetCode?: string }> {
+    return this.http.post<{ message: string; email?: string; resetCode?: string }>('/api/v1/auth/forgot-password', {
+      usernameOrEmail: usernameOrEmail.trim()
+    }).pipe(
+      catchError((httpErr) => {
+        const msg = httpErr?.error?.message || httpErr?.error?.detail || httpErr?.message || 'Unable to process password reset request.';
+        return throwError(() => new Error(msg));
+      })
+    );
+  }
+
+  /**
+   * Reset user password using verification code and unlock account.
+   */
+  resetPassword(token: string, newPassword: string): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>('/api/v1/auth/reset-password', {
+      token: token.trim(),
+      newPassword: newPassword
+    }).pipe(
+      catchError((httpErr) => {
+        const msg = httpErr?.error?.message || httpErr?.error?.detail || httpErr?.message || 'Failed to reset password. Please check your verification code.';
         return throwError(() => new Error(msg));
       })
     );
@@ -186,19 +204,6 @@ export class AuthService {
       // Ignored
     }
     this.router.navigate(['/login']);
-  }
-
-  loginAsAdmin() {
-    const profile: UserProfile = {
-      id: this.ADMIN_SEED.id,
-      username: this.ADMIN_SEED.username,
-      name: this.ADMIN_SEED.fullName,
-      email: this.ADMIN_SEED.email,
-      roles: ['ADMIN'],
-      customerId: undefined,
-      status: 'ACTIVE'
-    };
-    this.setCurrentUser(profile);
   }
 
   getRedirectUrlForRole(role: UserRole): string {

@@ -2,6 +2,7 @@ package com.insurance.customer.service;
 
 import com.insurance.customer.dto.CustomerCreateRequest;
 import com.insurance.customer.dto.CustomerDto;
+import com.insurance.customer.dto.CustomerUpdateRequest;
 import com.insurance.customer.model.Customer;
 import com.insurance.customer.repository.CustomerRepository;
 import com.insurance.customer.repository.UserRepository;
@@ -50,8 +51,7 @@ public class CustomerService {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "A customer with this email already exists");
         }
 
-        long count = customerRepository.count();
-        String customerNumber = String.format("CUST-2026-%03d", count + 1);
+        String customerNumber = String.format("CUST-2026-%03d", customerRepository.nextCustomerNumber());
 
         Customer customer = new Customer(
                 UUID.randomUUID(),
@@ -107,6 +107,51 @@ public class CustomerService {
         userRepository.findByCustomerId(id).ifPresent(u -> {
             u.setStatus("REJECTED");
             u.setRejectionReason(reason != null ? reason : "Application failed KYC identity verification requirements");
+            u.setUpdatedAt(OffsetDateTime.now());
+            userRepository.save(u);
+        });
+
+        return toDto(saved);
+    }
+
+    @Transactional
+    public CustomerDto updateCustomer(UUID id, CustomerUpdateRequest request) {
+        Customer customer = customerRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Customer not found"));
+
+        if (request.phone() != null && !request.phone().isBlank()) {
+            customer.setPhone(request.phone().trim());
+        }
+        if (request.address() != null && !request.address().isBlank()) {
+            customer.setAddress(request.address().trim());
+        }
+        if (request.occupation() != null) {
+            customer.setOccupation(request.occupation().trim().isBlank() ? null : request.occupation().trim());
+        }
+        if (request.annualIncome() != null) {
+            customer.setAnnualIncome(request.annualIncome());
+        }
+        if (request.emergencyContactName() != null) {
+            customer.setEmergencyContactName(request.emergencyContactName().trim().isBlank() ? null : request.emergencyContactName().trim());
+        }
+        if (request.emergencyContactPhone() != null) {
+            customer.setEmergencyContactPhone(request.emergencyContactPhone().trim().isBlank() ? null : request.emergencyContactPhone().trim());
+        }
+
+        customer.setUpdatedAt(OffsetDateTime.now());
+        return toDto(customerRepository.save(customer));
+    }
+
+    @Transactional
+    public CustomerDto deactivateCustomer(UUID id) {
+        Customer customer = customerRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Customer not found"));
+        customer.setStatus("INACTIVE");
+        customer.setUpdatedAt(OffsetDateTime.now());
+        Customer saved = customerRepository.save(customer);
+
+        userRepository.findByCustomerId(id).ifPresent(u -> {
+            u.setStatus("INACTIVE");
             u.setUpdatedAt(OffsetDateTime.now());
             userRepository.save(u);
         });

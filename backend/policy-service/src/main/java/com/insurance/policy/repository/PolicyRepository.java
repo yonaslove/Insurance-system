@@ -4,6 +4,7 @@ import com.insurance.policy.model.Policy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -15,4 +16,7 @@ public interface PolicyRepository extends JpaRepository<Policy, UUID> {
     Optional<Policy> findByPolicyNumber(String policyNumber);
     Page<Policy> findByStatus(String status, Pageable pageable);
     List<Policy> findByCustomerId(UUID customerId);
+
+    @Query(value = "SELECT nextval('policy_number_seq')", nativeQuery = true)
+    long nextPolicyNumber();
 }

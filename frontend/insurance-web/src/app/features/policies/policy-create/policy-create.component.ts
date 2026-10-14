@@ -15,6 +15,7 @@ import { ButtonComponent } from '../../../shared/components/button/button.compon
 })
 export class PolicyCreateComponent {
   policyForm: FormGroup;
+  errorMessage = '';
 
   constructor(
     private fb: FormBuilder,
@@ -33,8 +34,11 @@ export class PolicyCreateComponent {
 
   onSubmit() {
     if (this.policyForm.valid) {
-      this.dataService.addPolicy(this.policyForm.value);
-      this.router.navigate(['/policies']);
+      this.errorMessage = '';
+      this.dataService.addPolicy(this.policyForm.value).subscribe({
+        next: () => this.router.navigate(['/policies']),
+        error: (err) => { this.errorMessage = err?.error?.message || 'Failed to bind policy. Please try again.'; }
+      });
     }
   }
 }

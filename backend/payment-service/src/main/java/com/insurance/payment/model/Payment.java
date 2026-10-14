@@ -40,6 +40,9 @@ public class Payment {
     @Column(name = "created_at", nullable = false)
     private OffsetDateTime createdAt;
 
+    @Column(name = "idempotency_key", length = 100)
+    private String idempotencyKey;
+
     public Payment() {}
 
     public Payment(UUID id, String paymentReference, UUID policyId, UUID claimId, BigDecimal amount, String currency, String paymentMethodReference, String status, OffsetDateTime paidAt, OffsetDateTime createdAt) {
@@ -84,4 +87,7 @@ public class Payment {
 
     public OffsetDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(OffsetDateTime createdAt) { this.createdAt = createdAt; }
+
+    public String getIdempotencyKey() { return idempotencyKey; }
+    public void setIdempotencyKey(String idempotencyKey) { this.idempotencyKey = idempotencyKey; }
 }

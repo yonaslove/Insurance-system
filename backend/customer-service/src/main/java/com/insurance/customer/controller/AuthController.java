@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -35,13 +36,27 @@ public class AuthController {
         return ResponseEntity.status(HttpStatus.CREATED).body(authUserService.registerCustomer(request));
     }
 
+    @PostMapping("/forgot-password")
+    @Operation(summary = "Request password reset verification code by username or email")
+    public ResponseEntity<ForgotPasswordResponse> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+        return ResponseEntity.ok(authUserService.forgotPassword(request));
+    }
+
+    @PostMapping("/reset-password")
+    @Operation(summary = "Reset account credentials using 6-digit verification code and unlock account")
+    public ResponseEntity<Map<String, String>> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+        return ResponseEntity.ok(authUserService.resetPassword(request));
+    }
+
     @PostMapping("/users")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Admin operation: Add customers or any actor (Underwriter, Claims Officer, etc.) to the system")
     public ResponseEntity<UserDto> createUserByAdmin(@Valid @RequestBody AdminCreateUserRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(authUserService.createUserByAdmin(request));
     }
 
     @GetMapping("/users")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Admin operation: List all actors and users in the system (optionally filtered by role)")
     public ResponseEntity<List<UserDto>> listUsers(@RequestParam(required = false) String role) {
         List<UserDto> users = authUserService.listUsers();

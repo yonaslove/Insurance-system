@@ -14,5 +14,6 @@ public record PaymentDto(
     String paymentMethodReference,
     String status,
     OffsetDateTime paidAt,
-    OffsetDateTime createdAt
+    OffsetDateTime createdAt,
+    String idempotencyKey
 ) {}
