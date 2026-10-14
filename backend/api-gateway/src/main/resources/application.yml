@@ -63,3 +63,12 @@ management:
     web:
       exposure:
         include: health,info
+
+gateway:
+  rate-limit:
+    enabled: true
+    default-replenish-rate: 120
+    default-burst-capacity: 150
+    auth-replenish-rate: 30
+    auth-burst-capacity: 40
+
