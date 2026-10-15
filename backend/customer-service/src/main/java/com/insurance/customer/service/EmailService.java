@@ -35,7 +35,7 @@ public class EmailService {
         return "support@insurance-system.com";
     }
 
-    public void sendPasswordResetEmail(String toEmail, String fullName, String resetCode, String resetLink) {
+    public void sendPasswordResetEmail(String toEmail, String fullName, String resetCode) {
         String fromSender = getSenderEmail();
 
         log.info("================================================================================");
@@ -44,7 +44,6 @@ public class EmailService {
         log.info("Recipient  : {} <{}>", fullName, toEmail);
         log.info("Subject    : Password Reset Verification Code - Insurance System");
         log.info("Reset Code : >>> {} <<<", resetCode);
-        log.info("Reset Link : {}", resetLink);
         log.info("Expires In : 15 minutes");
         log.info("================================================================================");
 
@@ -59,13 +58,12 @@ public class EmailService {
                         "We received a request to reset the password for your Insurance System account.\n\n" +
                         "Your 6-digit password reset verification code is:\n\n" +
                         "      %s\n\n" +
-                        "This code will expire in 15 minutes.\n\n" +
-                        "Alternatively, click or open the link below to enter your new password:\n" +
-                        "%s\n\n" +
-                        "If you did not request this password reset, please contact support immediately.\n\n" +
+                        "Please enter this 6-digit code on the reset password screen to verify your identity and set your new password.\n\n" +
+                        "This code is confidential and will expire in 15 minutes.\n\n" +
+                        "If you did not request this password reset, please contact security support immediately.\n\n" +
                         "Best regards,\n" +
                         "Insurance System Support Team",
-                        fullName, resetCode, resetLink
+                        fullName, resetCode
                 ));
                 mailSender.send(message);
                 log.info("Password reset email sent successfully via SMTP to {}", toEmail);

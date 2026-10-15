@@ -36,13 +36,11 @@ export class LoginComponent implements OnInit {
 
   ngOnInit() {
     this.route.queryParams.subscribe(params => {
-      if (params['code']) {
-        this.resetCode = params['code'];
-        if (params['email']) {
-          this.forgotIdentifier = params['email'];
-        }
+      if (params['email']) {
+        this.forgotIdentifier = params['email'];
+      }
+      if (params['mode'] === 'reset' || params['reset'] === 'true') {
         this.mode = 'reset';
-        this.infoMessage = 'Verification code detected. Enter your new password below to reset and unlock your account.';
       }
     });
   }
@@ -104,12 +102,8 @@ export class LoginComponent implements OnInit {
         this.loading = false;
         this.maskedEmail = res.email || this.forgotIdentifier.trim();
         this.mode = 'reset';
-        if (res.resetCode) {
-          this.resetCode = res.resetCode;
-          this.infoMessage = `${res.message} (Verification Code: ${res.resetCode})`;
-        } else {
-          this.infoMessage = res.message || 'Verification code sent to your email.';
-        }
+        this.resetCode = '';
+        this.infoMessage = res.message || 'A 6-digit verification code has been sent to your email address. Please check your inbox.';
       },
       error: (err) => {
         this.loading = false;

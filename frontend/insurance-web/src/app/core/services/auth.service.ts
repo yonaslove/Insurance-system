@@ -130,8 +130,8 @@ export class AuthService {
   /**
    * Request password reset verification code by email or username.
    */
-  forgotPassword(usernameOrEmail: string): Observable<{ message: string; email?: string; resetCode?: string }> {
-    return this.http.post<{ message: string; email?: string; resetCode?: string }>('/api/v1/auth/forgot-password', {
+  forgotPassword(usernameOrEmail: string): Observable<{ message: string; email?: string }> {
+    return this.http.post<{ message: string; email?: string }>('/api/v1/auth/forgot-password', {
       usernameOrEmail: usernameOrEmail.trim()
     }).pipe(
       catchError((httpErr) => {

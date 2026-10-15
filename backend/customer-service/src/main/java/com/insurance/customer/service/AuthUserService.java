@@ -346,9 +346,26 @@ public class AuthUserService {
     @Transactional
     public ForgotPasswordResponse forgotPassword(ForgotPasswordRequest request) {
         String identifier = request.usernameOrEmail().trim();
-        User user = userRepository.findByUsername(identifier)
-                .or(() -> userRepository.findByEmail(identifier))
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No account found matching username or email: " + identifier));
+        User user = userRepository.findByUsernameIgnoreCase(identifier)
+                .or(() -> userRepository.findByEmailIgnoreCase(identifier))
+                .orElseGet(() -> {
+                    // Check if a registered customer exists with this email address
+                    Customer customer = customerRepository.findByEmailIgnoreCase(identifier).orElse(null);
+                    if (customer != null) {
+                        User newUser = new User(
+                                UUID.randomUUID(),
+                                customer.getEmail().toLowerCase(),
+                                customer.getEmail(),
+                                (customer.getFirstName() + " " + customer.getLastName()).trim(),
+                                "CUSTOMER",
+                                customer.getId(),
+                                customer.getStatus() != null ? customer.getStatus() : "ACTIVE",
+                                OffsetDateTime.now()
+                        );
+                        return userRepository.save(newUser);
+                    }
+                    throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No account found matching username or email: " + identifier);
+                });
 
         // Generate 6-digit verification code
         String resetCode = String.format("%06d", (int) (Math.random() * 900000) + 100000);
@@ -363,14 +380,12 @@ public class AuthUserService {
         );
         tokenRepository.save(resetToken);
 
-        String resetLink = "http://localhost:4200/login?code=" + resetCode + "&email=" + user.getEmail();
-        emailService.sendPasswordResetEmail(user.getEmail(), user.getFullName(), resetCode, resetLink);
+        emailService.sendPasswordResetEmail(user.getEmail(), user.getFullName(), resetCode);
 
         String masked = maskEmail(user.getEmail());
         return new ForgotPasswordResponse(
-                "A 6-digit verification code has been dispatched to " + masked,
-                masked,
-                resetCode
+                "A 6-digit verification code has been dispatched to your registered email address (" + masked + "). Please check your inbox.",
+                masked
         );
     }
 

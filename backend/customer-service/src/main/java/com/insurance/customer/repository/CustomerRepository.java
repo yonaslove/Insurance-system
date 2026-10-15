@@ -15,6 +15,7 @@ import java.util.UUID;
 public interface CustomerRepository extends JpaRepository<Customer, UUID> {
     Optional<Customer> findByCustomerNumber(String customerNumber);
     boolean existsByEmail(String email);
+    Optional<Customer> findByEmailIgnoreCase(String email);
 
     @Query("SELECT c FROM Customer c WHERE " +
            "LOWER(c.firstName) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
