@@ -364,6 +364,38 @@ public class AuthUserService {
                         );
                         return userRepository.save(newUser);
                     }
+                    // If the customer entered any email address, automatically create customer account
+                    // so the 6-digit verification code is immediately dispatched to their entered email!
+                    if (identifier.contains("@") && identifier.contains(".")) {
+                        String cleanEmail = identifier.toLowerCase().trim();
+                        String baseUsername = cleanEmail.substring(0, cleanEmail.indexOf('@')).replaceAll("[^a-zA-Z0-9_]", "");
+                        if (baseUsername.isBlank()) {
+                            baseUsername = "customer";
+                        }
+                        String candidateUsername = baseUsername;
+                        int suffix = 1;
+                        while (userRepository.existsByUsernameIgnoreCase(candidateUsername)) {
+                            candidateUsername = baseUsername + "_" + suffix++;
+                        }
+
+                        String defaultName = baseUsername;
+                        if (defaultName.length() > 1) {
+                            defaultName = Character.toUpperCase(defaultName.charAt(0)) + defaultName.substring(1);
+                        }
+
+                        User newUser = new User(
+                                UUID.randomUUID(),
+                                candidateUsername,
+                                cleanEmail,
+                                defaultName,
+                                "CUSTOMER",
+                                null,
+                                "ACTIVE",
+                                OffsetDateTime.now()
+                        );
+                        return userRepository.save(newUser);
+                    }
+
                     throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No account found matching username or email: " + identifier);
                 });
 
