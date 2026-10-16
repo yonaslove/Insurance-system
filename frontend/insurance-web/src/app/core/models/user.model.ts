@@ -45,6 +45,15 @@ export interface AdminCreateUserRequest {
   address?: string;
 }
 
+export interface AdminUpdateUserRequest {
+  fullName: string;
+  email: string;
+  role: UserRole;
+  status: string;
+  newPassword?: string;
+  unlockAccount?: boolean;
+}
+
 export interface UserAccount {
   id: string;
   username: string;

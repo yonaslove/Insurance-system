@@ -281,17 +281,125 @@ public class AuthUserService {
     public List<UserDto> listUsers() {
         return userRepository.findAllByOrderByCreatedAtDesc()
                 .stream()
-                .map(u -> new UserDto(
-                        u.getId(),
-                        u.getUsername(),
-                        u.getEmail(),
-                        u.getFullName(),
-                        u.getRole(),
-                        u.getCustomerId(),
-                        u.getStatus(),
-                        u.getCreatedAt()
-                ))
+                .map(u -> {
+                    String status = u.getStatus();
+                    if (u.getLockedUntil() != null && u.getLockedUntil().isAfter(OffsetDateTime.now())) {
+                        status = "LOCKED";
+                    }
+                    return new UserDto(
+                            u.getId(),
+                            u.getUsername(),
+                            u.getEmail(),
+                            u.getFullName(),
+                            u.getRole(),
+                            u.getCustomerId(),
+                            status,
+                            u.getCreatedAt()
+                    );
+                })
                 .toList();
+    }
+
+    @Transactional
+    public UserDto updateUser(UUID id, AdminUpdateUserRequest request) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
+        String cleanEmail = request.email().trim();
+        if (!cleanEmail.equalsIgnoreCase(user.getEmail()) && userRepository.existsByEmail(cleanEmail)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Email address is already in use by another user");
+        }
+
+        user.setFullName(request.fullName().trim());
+        user.setEmail(cleanEmail);
+        user.setRole(request.role().trim().toUpperCase());
+        user.setStatus(request.status().trim().toUpperCase());
+        user.setUpdatedAt(OffsetDateTime.now());
+
+        if (Boolean.TRUE.equals(request.unlockAccount())) {
+            user.setFailedLoginAttempts(0);
+            user.setLockedUntil(null);
+        }
+
+        // Update in Keycloak
+        keycloakService.updateKeycloakUser(
+                user.getUsername(),
+                user.getEmail(),
+                user.getFullName(),
+                user.getRole()
+        );
+
+        // If new password provided, reset Keycloak password
+        if (request.newPassword() != null && !request.newPassword().isBlank()) {
+            if (request.newPassword().trim().length() < 6) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Password must be at least 6 characters");
+            }
+            keycloakService.resetPassword(
+                    user.getUsername(),
+                    user.getEmail(),
+                    user.getFullName(),
+                    user.getRole(),
+                    request.newPassword().trim()
+            );
+        }
+
+        User saved = userRepository.save(user);
+
+        String status = saved.getStatus();
+        if (saved.getLockedUntil() != null && saved.getLockedUntil().isAfter(OffsetDateTime.now())) {
+            status = "LOCKED";
+        }
+
+        return new UserDto(
+                saved.getId(),
+                saved.getUsername(),
+                saved.getEmail(),
+                saved.getFullName(),
+                saved.getRole(),
+                saved.getCustomerId(),
+                status,
+                saved.getCreatedAt()
+        );
+    }
+
+    @Transactional
+    public void deleteUser(UUID id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
+        if ("admin".equalsIgnoreCase(user.getUsername())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The master administrator account 'admin' cannot be deleted.");
+        }
+
+        // Remove from Keycloak
+        keycloakService.deleteUserInKeycloak(user.getUsername());
+
+        // Delete from database (password_reset_tokens cascades via FK)
+        userRepository.delete(user);
+        log.info("Deleted user '{}' (ID {}) from database and identity provider", user.getUsername(), id);
+    }
+
+    @Transactional
+    public UserDto unlockUser(UUID id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
+        user.setFailedLoginAttempts(0);
+        user.setLockedUntil(null);
+        user.setStatus("ACTIVE");
+        user.setUpdatedAt(OffsetDateTime.now());
+        User saved = userRepository.save(user);
+
+        return new UserDto(
+                saved.getId(),
+                saved.getUsername(),
+                saved.getEmail(),
+                saved.getFullName(),
+                saved.getRole(),
+                saved.getCustomerId(),
+                saved.getStatus(),
+                saved.getCreatedAt()
+        );
     }
 
     /**

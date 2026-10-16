@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { InsuranceDataService } from '../../../core/services/insurance-data.service';
-import { AdminCreateUserRequest, UserAccount, UserRole } from '../../../core/models/user.model';
+import { AdminCreateUserRequest, AdminUpdateUserRequest, UserAccount, UserRole } from '../../../core/models/user.model';
 
 import { PaginationComponent } from '../../../shared/components/pagination/pagination.component';
 
@@ -29,6 +29,27 @@ export class UserManagementComponent implements OnInit {
   loading = false;
   successMessage = '';
   modalError = '';
+
+  // Edit User Modal State
+  showEditModal = false;
+  editUserId = '';
+  editUsername = '';
+  editForm: AdminUpdateUserRequest = {
+    fullName: '',
+    email: '',
+    role: 'UNDERWRITER',
+    status: 'ACTIVE',
+    newPassword: '',
+    unlockAccount: false
+  };
+  editSubmitting = false;
+  editModalError = '';
+
+  // Delete User Modal State
+  showDeleteModal = false;
+  userToDelete: UserAccount | null = null;
+  deleteSubmitting = false;
+  deleteModalError = '';
 
   newUser: AdminCreateUserRequest = {
     username: '',
@@ -180,6 +201,103 @@ export class UserManagementComponent implements OnInit {
       next: () => {
         this.successMessage = `Policyholder "${user.fullName}" approved and activated!`;
         this.loadUsers();
+      }
+    });
+  }
+
+  openEditModal(user: UserAccount) {
+    this.editUserId = user.id;
+    this.editUsername = user.username;
+    this.editForm = {
+      fullName: user.fullName,
+      email: user.email,
+      role: user.role,
+      status: user.status === 'LOCKED' ? 'ACTIVE' : user.status,
+      newPassword: '',
+      unlockAccount: user.status === 'LOCKED'
+    };
+    this.editModalError = '';
+    this.showEditModal = true;
+  }
+
+  closeEditModal() {
+    this.showEditModal = false;
+    this.editModalError = '';
+    this.editUserId = '';
+  }
+
+  onSaveUser() {
+    this.editModalError = '';
+    if (!this.editForm.fullName || !this.editForm.email || !this.editForm.role) {
+      this.editModalError = 'Full name, email, and role are required.';
+      return;
+    }
+
+    if (this.editForm.newPassword && this.editForm.newPassword.length < 6) {
+      this.editModalError = 'New password must be at least 6 characters.';
+      return;
+    }
+
+    this.editSubmitting = true;
+    this.authService.updateUser(this.editUserId, this.editForm).subscribe({
+      next: (updated) => {
+        this.editSubmitting = false;
+        this.showEditModal = false;
+        this.successMessage = `User "${updated.fullName}" updated successfully!`;
+        this.loadUsers();
+      },
+      error: (err) => {
+        this.editSubmitting = false;
+        this.editModalError = err.message || 'Failed to update user profile.';
+      }
+    });
+  }
+
+  openDeleteModal(user: UserAccount) {
+    if (user.username === 'admin') {
+      this.modalError = 'The master administrator account cannot be deleted.';
+      return;
+    }
+    this.userToDelete = user;
+    this.deleteModalError = '';
+    this.showDeleteModal = true;
+  }
+
+  closeDeleteModal() {
+    this.showDeleteModal = false;
+    this.userToDelete = null;
+    this.deleteModalError = '';
+  }
+
+  onConfirmDelete() {
+    if (!this.userToDelete) return;
+
+    this.deleteSubmitting = true;
+    const deletedName = this.userToDelete.fullName;
+
+    this.authService.deleteUser(this.userToDelete.id).subscribe({
+      next: () => {
+        this.deleteSubmitting = false;
+        this.showDeleteModal = false;
+        this.userToDelete = null;
+        this.successMessage = `User "${deletedName}" was permanently deleted.`;
+        this.loadUsers();
+      },
+      error: (err) => {
+        this.deleteSubmitting = false;
+        this.deleteModalError = err.message || 'Failed to delete user account.';
+      }
+    });
+  }
+
+  quickUnlock(user: UserAccount) {
+    this.authService.unlockUser(user.id).subscribe({
+      next: (unlocked) => {
+        this.successMessage = `Account "${unlocked.fullName}" has been unlocked!`;
+        this.loadUsers();
+      },
+      error: (err) => {
+        this.modalError = err.message || 'Failed to unlock user account.';
       }
     });
   }

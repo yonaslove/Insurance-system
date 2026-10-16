@@ -230,6 +230,64 @@ public class KeycloakService {
     }
 
     /**
+     * Updates an existing user's profile and role in Keycloak.
+     */
+    public void updateKeycloakUser(String username, String email, String fullName, String role) {
+        String adminToken = getAdminAccessToken();
+        if (adminToken == null) return;
+
+        String userId = findUserIdByUsername(username, adminToken);
+        if (userId == null) {
+            log.info("User '{}' not found in Keycloak during update", username);
+            return;
+        }
+
+        try {
+            String userUrl = String.format("%s/admin/realms/%s/users/%s", authServerUrl, realm, userId);
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.setBearerAuth(adminToken);
+
+            String[] nameParts = splitFullName(fullName);
+            Map<String, Object> updatePayload = new HashMap<>();
+            updatePayload.put("email", email);
+            updatePayload.put("firstName", nameParts[0]);
+            updatePayload.put("lastName", nameParts[1]);
+
+            HttpEntity<Map<String, Object>> request = new HttpEntity<>(updatePayload, headers);
+            restTemplate.exchange(userUrl, HttpMethod.PUT, request, Void.class);
+            log.info("Updated Keycloak attributes for user '{}' (ID {})", username, userId);
+
+            if (role != null && !role.isBlank()) {
+                assignRealmRoleToUser(userId, role.toUpperCase(), adminToken);
+            }
+        } catch (Exception ex) {
+            log.warn("Could not update Keycloak user '{}': {}", username, ex.getMessage());
+        }
+    }
+
+    /**
+     * Deletes a user account from Keycloak realm.
+     */
+    public void deleteUserInKeycloak(String username) {
+        String adminToken = getAdminAccessToken();
+        if (adminToken == null) return;
+
+        String userId = findUserIdByUsername(username, adminToken);
+        if (userId != null) {
+            try {
+                String deleteUrl = String.format("%s/admin/realms/%s/users/%s", authServerUrl, realm, userId);
+                HttpHeaders headers = new HttpHeaders();
+                headers.setBearerAuth(adminToken);
+                restTemplate.exchange(deleteUrl, HttpMethod.DELETE, new HttpEntity<>(headers), Void.class);
+                log.info("Deleted Keycloak user ID {} ('{}')", userId, username);
+            } catch (Exception ex) {
+                log.warn("Could not delete user '{}' in Keycloak: {}", username, ex.getMessage());
+            }
+        }
+    }
+
+    /**
      * Resets a user's password in Keycloak.
      */
     public void resetKeycloakUserPassword(String userId, String newPassword, String adminToken) {

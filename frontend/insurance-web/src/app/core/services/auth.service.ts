@@ -8,6 +8,7 @@ import {
   UserRole,
   CustomerRegisterRequest,
   AdminCreateUserRequest,
+  AdminUpdateUserRequest,
   UserAccount
 } from '../models/user.model';
 
@@ -183,6 +184,51 @@ export class AuthService {
         }
       }),
       catchError(() => of(this.usersListSignal()))
+    );
+  }
+
+  /**
+   * Administrator operation: Update an existing user (/api/v1/auth/users/:id).
+   */
+  updateUser(id: string, request: AdminUpdateUserRequest): Observable<UserAccount> {
+    return this.http.put<UserAccount>(`/api/v1/auth/users/${id}`, request).pipe(
+      tap(updatedUser => {
+        this.usersListSignal.update(list => list.map(u => u.id === id ? updatedUser : u));
+      }),
+      catchError((httpErr) => {
+        const msg = httpErr?.error?.message || httpErr?.error?.detail || httpErr?.message || 'Failed to update user profile.';
+        return throwError(() => new Error(msg));
+      })
+    );
+  }
+
+  /**
+   * Administrator operation: Delete a user account (/api/v1/auth/users/:id).
+   */
+  deleteUser(id: string): Observable<{ message: string }> {
+    return this.http.delete<{ message: string }>(`/api/v1/auth/users/${id}`).pipe(
+      tap(() => {
+        this.usersListSignal.update(list => list.filter(u => u.id !== id));
+      }),
+      catchError((httpErr) => {
+        const msg = httpErr?.error?.message || httpErr?.error?.detail || httpErr?.message || 'Failed to delete user account.';
+        return throwError(() => new Error(msg));
+      })
+    );
+  }
+
+  /**
+   * Administrator operation: Immediately unlock a locked user account (/api/v1/auth/users/:id/unlock).
+   */
+  unlockUser(id: string): Observable<UserAccount> {
+    return this.http.post<UserAccount>(`/api/v1/auth/users/${id}/unlock`, {}).pipe(
+      tap(unlockedUser => {
+        this.usersListSignal.update(list => list.map(u => u.id === id ? unlockedUser : u));
+      }),
+      catchError((httpErr) => {
+        const msg = httpErr?.error?.message || httpErr?.error?.detail || httpErr?.message || 'Failed to unlock user account.';
+        return throwError(() => new Error(msg));
+      })
     );
   }
 

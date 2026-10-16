@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -64,6 +65,28 @@ public class AuthController {
             users = users.stream().filter(u -> role.equalsIgnoreCase(u.role())).toList();
         }
         return ResponseEntity.ok(users);
+    }
+
+    @PutMapping("/users/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Admin operation: Update a user's details, role, status, or credentials")
+    public ResponseEntity<UserDto> updateUser(@PathVariable UUID id, @Valid @RequestBody AdminUpdateUserRequest request) {
+        return ResponseEntity.ok(authUserService.updateUser(id, request));
+    }
+
+    @DeleteMapping("/users/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Admin operation: Delete a user account")
+    public ResponseEntity<Map<String, String>> deleteUser(@PathVariable UUID id) {
+        authUserService.deleteUser(id);
+        return ResponseEntity.ok(Map.of("message", "User account deleted successfully"));
+    }
+
+    @PostMapping("/users/{id}/unlock")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Admin operation: Unlock an account and clear failed attempts")
+    public ResponseEntity<UserDto> unlockUser(@PathVariable UUID id) {
+        return ResponseEntity.ok(authUserService.unlockUser(id));
     }
 
     @GetMapping("/actors")

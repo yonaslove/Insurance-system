@@ -113,6 +113,7 @@
           <th>Assigned Workspace</th>
           <th>Status</th>
           <th>Created Date</th>
+          <th>Actions</th>
         </tr>
       </thead>
       <tbody>
@@ -139,6 +140,37 @@
               }
             </td>
             <td>{{ user.createdAt | date:'mediumDate' }}</td>
+            <td>
+              <div class="action-buttons-cell">
+                <button 
+                  type="button" 
+                  class="btn-action-edit" 
+                  title="Edit user details"
+                  (click)="openEditModal(user)">
+                  ✏️ Edit
+                </button>
+
+                @if (user.status === 'LOCKED') {
+                  <button 
+                    type="button" 
+                    class="btn-action-unlock" 
+                    title="Unlock account immediately"
+                    (click)="quickUnlock(user)">
+                    🔓 Unlock
+                  </button>
+                }
+
+                @if (user.username !== 'admin') {
+                  <button 
+                    type="button" 
+                    class="btn-action-delete" 
+                    title="Delete user"
+                    (click)="openDeleteModal(user)">
+                    🗑️ Delete
+                  </button>
+                }
+              </div>
+            </td>
           </tr>
         }
       </tbody>
@@ -284,6 +316,147 @@
           </div>
 
         </form>
+      </div>
+    </div>
+  }
+
+  <!-- Edit User Modal -->
+  @if (showEditModal) {
+    <div class="modal-backdrop">
+      <div class="modal-window">
+        <div class="modal-header">
+          <h2>Edit User: {{ editUsername }}</h2>
+          <button type="button" class="btn-close-modal" (click)="closeEditModal()">&times;</button>
+        </div>
+
+        @if (editModalError) {
+          <div class="alert-modal-error">⚠️ {{ editModalError }}</div>
+        }
+
+        <form (ngSubmit)="onSaveUser()" class="modal-form" autocomplete="off">
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label for="editFullName">Full Name *</label>
+              <input 
+                id="editFullName" 
+                name="editFullName" 
+                type="text" 
+                [(ngModel)]="editForm.fullName" 
+                required 
+                class="form-control" />
+            </div>
+
+            <div class="form-group">
+              <label for="editEmail">Email Address *</label>
+              <input 
+                id="editEmail" 
+                name="editEmail" 
+                type="email" 
+                [(ngModel)]="editForm.email" 
+                required 
+                class="form-control" />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="editRole">User Role *</label>
+              <select 
+                id="editRole" 
+                name="editRole" 
+                [(ngModel)]="editForm.role" 
+                required 
+                class="form-control">
+                <option value="CUSTOMER">Customer</option>
+                <option value="UNDERWRITER">Underwriter</option>
+                <option value="CLAIMS_OFFICER">Claims Officer</option>
+                <option value="FINANCE_OFFICER">Finance Officer</option>
+                <option value="CUSTOMER_SERVICE">Customer Service</option>
+                <option value="ADMIN">Administrator</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="editStatus">Account Status *</label>
+              <select 
+                id="editStatus" 
+                name="editStatus" 
+                [(ngModel)]="editForm.status" 
+                required 
+                class="form-control">
+                <option value="ACTIVE">ACTIVE</option>
+                <option value="SUSPENDED">SUSPENDED</option>
+                <option value="PENDING_APPROVAL">PENDING_APPROVAL</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="editNewPassword">Set New Password (leave blank to keep current)</label>
+            <input 
+              id="editNewPassword" 
+              name="editNewPassword" 
+              type="password" 
+              [(ngModel)]="editForm.newPassword" 
+              autocomplete="new-password"
+              class="form-control" />
+          </div>
+
+          <div class="form-group-checkbox">
+            <label class="checkbox-label">
+              <input 
+                type="checkbox" 
+                name="editUnlock" 
+                [(ngModel)]="editForm.unlockAccount" />
+              <span>Reset failed login count and unlock account immediately</span>
+            </label>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn-cancel" (click)="closeEditModal()">Cancel</button>
+            <button type="submit" class="btn-submit-user" [disabled]="editSubmitting">
+              @if (editSubmitting) {
+                <span>Saving...</span>
+              } @else {
+                <span>Save Changes ✓</span>
+              }
+            </button>
+          </div>
+
+        </form>
+      </div>
+    </div>
+  }
+
+  <!-- Delete User Confirmation Modal -->
+  @if (showDeleteModal && userToDelete) {
+    <div class="modal-backdrop">
+      <div class="modal-window modal-sm">
+        <div class="modal-header modal-header-danger">
+          <h2>Delete User Account</h2>
+          <button type="button" class="btn-close-modal" (click)="closeDeleteModal()">&times;</button>
+        </div>
+
+        @if (deleteModalError) {
+          <div class="alert-modal-error">⚠️ {{ deleteModalError }}</div>
+        }
+
+        <div class="modal-body-confirm">
+          <p>Are you sure you want to permanently delete user <strong>{{ userToDelete.fullName }}</strong> (<code>{{ userToDelete.username }}</code>)?</p>
+          <p class="text-danger-warning">⚠️ This account will be removed from both the database and Keycloak identity provider. This action cannot be undone.</p>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn-cancel" (click)="closeDeleteModal()" [disabled]="deleteSubmitting">Cancel</button>
+          <button type="button" class="btn-delete-confirm" (click)="onConfirmDelete()" [disabled]="deleteSubmitting">
+            @if (deleteSubmitting) {
+              <span>Deleting...</span>
+            } @else {
+              <span>Yes, Delete Account 🗑️</span>
+            }
+          </button>
+        </div>
       </div>
     </div>
   }
