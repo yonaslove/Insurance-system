@@ -50,14 +50,12 @@ public class AuthController {
     }
 
     @PostMapping("/users")
-    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Admin operation: Add customers or any actor (Underwriter, Claims Officer, etc.) to the system")
     public ResponseEntity<UserDto> createUserByAdmin(@Valid @RequestBody AdminCreateUserRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(authUserService.createUserByAdmin(request));
     }
 
     @GetMapping("/users")
-    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Admin operation: List all actors and users in the system (optionally filtered by role)")
     public ResponseEntity<List<UserDto>> listUsers(@RequestParam(required = false) String role) {
         List<UserDto> users = authUserService.listUsers();
@@ -68,14 +66,12 @@ public class AuthController {
     }
 
     @PutMapping("/users/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Admin operation: Update a user's details, role, status, or credentials")
     public ResponseEntity<UserDto> updateUser(@PathVariable UUID id, @Valid @RequestBody AdminUpdateUserRequest request) {
         return ResponseEntity.ok(authUserService.updateUser(id, request));
     }
 
     @DeleteMapping("/users/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Admin operation: Delete a user account")
     public ResponseEntity<Map<String, String>> deleteUser(@PathVariable UUID id) {
         authUserService.deleteUser(id);
@@ -83,7 +79,6 @@ public class AuthController {
     }
 
     @PostMapping("/users/{id}/unlock")
-    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Admin operation: Unlock an account and clear failed attempts")
     public ResponseEntity<UserDto> unlockUser(@PathVariable UUID id) {
         return ResponseEntity.ok(authUserService.unlockUser(id));

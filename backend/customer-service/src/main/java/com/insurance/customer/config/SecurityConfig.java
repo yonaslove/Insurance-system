@@ -32,11 +32,7 @@ import java.util.Map;
 public class SecurityConfig {
 
     private static final String[] PUBLIC_PATHS = {
-            "/api/v1/auth/login",
-            "/api/v1/auth/register",
-            "/api/v1/auth/actors",
-            "/api/v1/auth/forgot-password",
-            "/api/v1/auth/reset-password",
+            "/api/v1/auth/**",
             "/actuator/health/**",
             "/actuator/info",
             "/v3/api-docs/**",
