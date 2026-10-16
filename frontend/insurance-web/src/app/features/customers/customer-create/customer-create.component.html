@@ -13,7 +13,7 @@
         <div class="form-grid">
           <div class="form-group">
             <label for="firstName">First Name *</label>
-            <input id="firstName" type="text" formControlName="firstName" placeholder="e.g. Alexander">
+            <input id="firstName" type="text" formControlName="firstName">
             @if (customerForm.get('firstName')?.touched && customerForm.get('firstName')?.invalid) {
               <span class="field-error">First name is required</span>
             }
@@ -21,7 +21,7 @@
 
           <div class="form-group">
             <label for="lastName">Last Name *</label>
-            <input id="lastName" type="text" formControlName="lastName" placeholder="e.g. Wright">
+            <input id="lastName" type="text" formControlName="lastName">
             @if (customerForm.get('lastName')?.touched && customerForm.get('lastName')?.invalid) {
               <span class="field-error">Last name is required</span>
             }
@@ -29,7 +29,7 @@
 
           <div class="form-group">
             <label for="email">Email Address *</label>
-            <input id="email" type="email" formControlName="email" placeholder="e.g. a.wright@example.com">
+            <input id="email" type="email" formControlName="email">
             @if (customerForm.get('email')?.touched && customerForm.get('email')?.invalid) {
               <span class="field-error">Valid email address is required</span>
             }
@@ -37,7 +37,7 @@
 
           <div class="form-group">
             <label for="phone">Phone Number *</label>
-            <input id="phone" type="tel" formControlName="phone" placeholder="e.g. +1 (555) 234-5678">
+            <input id="phone" type="tel" formControlName="phone">
             @if (customerForm.get('phone')?.touched && customerForm.get('phone')?.invalid) {
               <span class="field-error">Phone number is required</span>
             }
@@ -45,7 +45,7 @@
 
           <div class="form-group full-width">
             <label for="address">Mailing & Risk Address *</label>
-            <textarea id="address" formControlName="address" rows="3" placeholder="Street, Unit, City, State, ZIP"></textarea>
+            <textarea id="address" formControlName="address" rows="3"></textarea>
             @if (customerForm.get('address')?.touched && customerForm.get('address')?.invalid) {
               <span class="field-error">Address is required</span>
             }

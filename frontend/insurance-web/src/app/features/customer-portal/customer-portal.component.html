@@ -308,7 +308,6 @@
                   type="number" 
                   step="0.01" 
                   [(ngModel)]="newClaim.claimedAmount" 
-                  placeholder="e.g. 1500.00" 
                   required 
                   class="form-control" />
               </div>
@@ -320,7 +319,6 @@
                   name="location" 
                   type="text" 
                   [(ngModel)]="incidentLocation" 
-                  placeholder="e.g. 4th Ave &amp; Main St, Springfield" 
                   class="form-control" />
               </div>
 
@@ -331,7 +329,6 @@
                   name="policeReport" 
                   type="text" 
                   [(ngModel)]="policeReportNumber" 
-                  placeholder="e.g. SPD-2026-8812" 
                   class="form-control" />
               </div>
             </div>
@@ -343,7 +340,6 @@
                 name="description" 
                 rows="4" 
                 [(ngModel)]="newClaim.description" 
-                placeholder="Describe exactly what happened, circumstances of the loss, estimated repair costs, or doctor diagnosis..." 
                 required 
                 class="form-control"></textarea>
             </div>

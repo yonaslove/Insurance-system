@@ -31,7 +31,7 @@
         <span class="search-icon">🔍</span>
         <input
           type="text"
-          placeholder="Filter by claim number, policy, description, or status..."
+          placeholder="Search claims..."
           [value]="searchTerm()"
           (input)="onSearch($event)">
       </div>
@@ -182,7 +182,6 @@
                 type="number" 
                 step="0.01" 
                 [(ngModel)]="adjudicationAmount" 
-                placeholder="Enter authorized settlement payout" 
                 class="form-control" />
               <small class="hint-text">Deductibles or coverage sub-limits can be adjusted from the claimed amount ($ {{ selectedClaim.claimedAmount.toFixed(2) }}).</small>
             </div>
@@ -194,7 +193,6 @@
                 name="adjNotes" 
                 rows="3" 
                 [(ngModel)]="adjudicationNotes" 
-                placeholder="Record inspection findings, repair estimate verifications, police report matches..." 
                 class="form-control"></textarea>
             </div>
           </div>

@@ -58,7 +58,7 @@
         <span class="search-icon">🔍</span>
         <input
           type="text"
-          placeholder="Filter by name, email, ID number, or code..."
+          placeholder="Search customers..."
           [value]="searchTerm()"
           (input)="onSearch($event)">
       </div>
@@ -262,7 +262,6 @@
           <textarea 
             rows="3" 
             [(ngModel)]="rejectionReason" 
-            placeholder="e.g. Expired ID document, invalid address verification..." 
             class="form-control"></textarea>
         </div>
         <div class="modal-footer">

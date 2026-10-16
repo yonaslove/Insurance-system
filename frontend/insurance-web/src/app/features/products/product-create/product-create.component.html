@@ -1,7 +1,7 @@
 <div class="create-page">
   <div class="page-header">
     <div>
-      <h1 class="page-title">Define New Insurance Product</h1>
+      <h1 class="page-title">New Product</h1>
       <p class="page-subtitle">Configure coverage baseline, underwriting limits, and starting premiums.</p>
     </div>
     <app-button variant="secondary" routerLink="/products">Back to Products</app-button>
@@ -13,7 +13,7 @@
         <div class="form-grid">
           <div class="form-group">
             <label for="code">Product Code *</label>
-            <input id="code" type="text" formControlName="code" placeholder="e.g. PRD-LIFE-TERM">
+            <input id="code" type="text" formControlName="code">
             @if (productForm.get('code')?.touched && productForm.get('code')?.invalid) {
               <span class="field-error">Product code is required</span>
             }
@@ -31,7 +31,7 @@
 
           <div class="form-group full-width">
             <label for="name">Product Title *</label>
-            <input id="name" type="text" formControlName="name" placeholder="e.g. Elite Term Life Assurance">
+            <input id="name" type="text" formControlName="name">
             @if (productForm.get('name')?.touched && productForm.get('name')?.invalid) {
               <span class="field-error">Product name is required</span>
             }
@@ -39,7 +39,7 @@
 
           <div class="form-group full-width">
             <label for="description">Plan Summary & Coverage Scope *</label>
-            <textarea id="description" formControlName="description" rows="3" placeholder="Provide complete scope details..."></textarea>
+            <textarea id="description" formControlName="description" rows="3"></textarea>
             @if (productForm.get('description')?.touched && productForm.get('description')?.invalid) {
               <span class="field-error">Description is required</span>
             }
@@ -47,7 +47,7 @@
 
           <div class="form-group">
             <label for="basePremium">Monthly Base Rate (USD) *</label>
-            <input id="basePremium" type="number" step="0.01" formControlName="basePremium" placeholder="150.00">
+            <input id="basePremium" type="number" step="0.01" formControlName="basePremium">
             @if (productForm.get('basePremium')?.touched && productForm.get('basePremium')?.invalid) {
               <span class="field-error">Valid positive base rate required</span>
             }

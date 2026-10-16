@@ -36,9 +36,6 @@ export class LoginComponent implements OnInit {
 
   ngOnInit() {
     this.route.queryParams.subscribe(params => {
-      if (params['email']) {
-        this.forgotIdentifier = params['email'];
-      }
       if (params['mode'] === 'reset' || params['reset'] === 'true') {
         this.mode = 'reset';
       }
@@ -49,9 +46,6 @@ export class LoginComponent implements OnInit {
     this.mode = newMode;
     this.errorMessage = '';
     this.infoMessage = '';
-    if (newMode === 'forgot' && this.username && !this.forgotIdentifier) {
-      this.forgotIdentifier = this.username;
-    }
   }
 
   onForgotPassword() {
