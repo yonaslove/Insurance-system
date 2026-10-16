@@ -2,13 +2,13 @@
   
   <div class="page-header">
     <div>
-      <span class="header-badge">Admin Responsibility Console</span>
-      <h1>Actor & User Provisioning</h1>
-      <p>Manage system actors, provision new staff roles, and onboard enterprise policyholders with exact database credentials.</p>
+      <span class="header-badge">Admin</span>
+      <h1>Users</h1>
+      <p>Manage system users, staff roles, and policyholder accounts.</p>
     </div>
 
     <button type="button" class="btn-create-user" (click)="showCreateModal = true">
-      ➕ Provision New Actor / Customer
+      ➕ Add User
     </button>
   </div>
 
@@ -159,7 +159,7 @@
     <div class="modal-backdrop">
       <div class="modal-window">
         <div class="modal-header">
-          <h2>Provision New Actor or Customer</h2>
+          <h2>Add New User</h2>
           <button type="button" class="btn-close-modal" (click)="showCreateModal = false">&times;</button>
         </div>
 
@@ -170,19 +170,19 @@
         <form (ngSubmit)="onCreateUser()" class="modal-form">
           
           <div class="form-group">
-            <label for="actorRole">Assign Actor Role & Responsibility *</label>
+            <label for="actorRole">User Role *</label>
             <select 
               id="actorRole" 
               name="actorRole" 
               [(ngModel)]="newUser.role" 
               required 
               class="form-control">
-              <option value="CUSTOMER">Customer (Policyholder Portal)</option>
-              <option value="UNDERWRITER">Underwriter (Policy Issuance & Risk)</option>
-              <option value="CLAIMS_OFFICER">Claims Officer (Claims Review & Adjudication)</option>
-              <option value="FINANCE_OFFICER">Finance Officer (Treasury & Payments)</option>
-              <option value="CUSTOMER_SERVICE">Customer Service (Directory & Support)</option>
-              <option value="ADMIN">Administrator (Full Access)</option>
+              <option value="CUSTOMER">Customer</option>
+              <option value="UNDERWRITER">Underwriter</option>
+              <option value="CLAIMS_OFFICER">Claims Officer</option>
+              <option value="FINANCE_OFFICER">Finance Officer</option>
+              <option value="CUSTOMER_SERVICE">Customer Service</option>
+              <option value="ADMIN">Administrator</option>
             </select>
           </div>
 
@@ -268,9 +268,9 @@
             <button type="button" class="btn-cancel" (click)="showCreateModal = false">Cancel</button>
             <button type="submit" class="btn-submit-user" [disabled]="submitting">
               @if (submitting) {
-                <span>Provisioning...</span>
+                <span>Saving...</span>
               } @else {
-                <span>Create Actor in Database →</span>
+                <span>Create User →</span>
               }
             </button>
           </div>

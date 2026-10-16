@@ -1,11 +1,11 @@
 <div class="claims-page">
   <div class="page-header">
     <div>
-      <h1 class="page-title">Claims Adjudication &amp; Settlement Center</h1>
-      <p class="page-subtitle">Adjudicate reported losses, inspect incident evidence, assess damage, and approve settlement payouts.</p>
+      <h1 class="page-title">Claims</h1>
+      <p class="page-subtitle">Review reported claims, inspect details, and approve settlements.</p>
     </div>
     <div class="header-actions">
-      <app-button variant="primary" routerLink="/claims/new">+ Report Loss Claim</app-button>
+      <app-button variant="primary" routerLink="/claims/new">+ New Claim</app-button>
     </div>
   </div>
 
@@ -87,7 +87,7 @@
               <th>Claimed Damage</th>
               <th>Approved Settlement</th>
               <th>Status</th>
-              <th>Adjudication Decision</th>
+              <th>Decision</th>
             </tr>
           </thead>
           <tbody>
@@ -118,7 +118,7 @@
                       type="button" 
                       class="btn-adjudicate" 
                       (click)="openAdjudication(c)">
-                      ⚖️ Adjudicate Claim
+                      ⚖️ Review Claim
                     </button>
                   } @else if (c.status === 'APPROVED') {
                     <span class="decision-pill decision-approved">✓ Approved (${{ c.approvedAmount?.toFixed(2) }})</span>
@@ -151,8 +151,8 @@
       <div class="modal-card" (click)="$event.stopPropagation()">
         <div class="modal-header">
           <div>
-            <h3>Official Loss Adjudication &amp; Investigation</h3>
-            <span class="modal-sub">Claim Reference: <strong>{{ selectedClaim.claimNumber }}</strong> &bull; Policy: {{ selectedClaim.policyNumber || selectedClaim.policyId }}</span>
+            <h3>Review Claim</h3>
+            <span class="modal-sub">Claim: <strong>{{ selectedClaim.claimNumber }}</strong> &bull; Policy: {{ selectedClaim.policyNumber || selectedClaim.policyId }}</span>
           </div>
           <button type="button" class="btn-close" (click)="closeModal()">&times;</button>
         </div>

@@ -8,17 +8,17 @@
   </div>
 
   <nav class="sidebar-nav">
-    <div class="nav-section">OPERATIONS & WORKSPACE</div>
+    <div class="nav-section">OPERATIONS</div>
 
     <!-- Customer Self-Service Links -->
     @if (authService.hasRole('CUSTOMER')) {
       <a routerLink="/portal" routerLinkActive="active" class="nav-item">
         <span class="nav-icon">🏠</span>
-        <span>My Insurance Portal</span>
+        <span>Portal</span>
       </a>
       <a routerLink="/portal" [queryParams]="{tab: 'file-claim'}" class="nav-item">
         <span class="nav-icon">➕</span>
-        <span>File a Claim</span>
+        <span>File Claim</span>
       </a>
     }
 
@@ -26,7 +26,7 @@
     @if (authService.hasAnyRole(['ADMIN', 'READ_ONLY'])) {
       <a routerLink="/dashboard" routerLinkActive="active" class="nav-item">
         <span class="nav-icon">📊</span>
-        <span>Executive Dashboard</span>
+        <span>Dashboard</span>
       </a>
     }
 
@@ -34,7 +34,7 @@
     @if (authService.hasAnyRole(['ADMIN', 'CUSTOMER_SERVICE'])) {
       <a routerLink="/customers" routerLinkActive="active" class="nav-item">
         <span class="nav-icon">👥</span>
-        <span>Customers Directory</span>
+        <span>Customers</span>
       </a>
     }
 
@@ -42,11 +42,11 @@
     @if (authService.hasAnyRole(['ADMIN', 'UNDERWRITER'])) {
       <a routerLink="/products" routerLinkActive="active" class="nav-item">
         <span class="nav-icon">📦</span>
-        <span>Products Catalog</span>
+        <span>Products</span>
       </a>
       <a routerLink="/policies" routerLinkActive="active" class="nav-item">
         <span class="nav-icon">📄</span>
-        <span>Policy Workbench</span>
+        <span>Policies</span>
       </a>
     }
 
@@ -54,7 +54,7 @@
     @if (authService.hasAnyRole(['ADMIN', 'CLAIMS_OFFICER'])) {
       <a routerLink="/claims" routerLinkActive="active" class="nav-item">
         <span class="nav-icon">⚖️</span>
-        <span>Claims Adjudication</span>
+        <span>Claims</span>
       </a>
     }
 
@@ -62,16 +62,16 @@
     @if (authService.hasAnyRole(['ADMIN', 'FINANCE_OFFICER'])) {
       <a routerLink="/payments" routerLinkActive="active" class="nav-item">
         <span class="nav-icon">💳</span>
-        <span>Payments & Treasury</span>
+        <span>Payments</span>
       </a>
     }
 
     <!-- Admin Governance Link -->
     @if (authService.hasRole('ADMIN')) {
-      <div class="nav-section">GOVERNANCE</div>
+      <div class="nav-section">ADMIN</div>
       <a routerLink="/admin/users" routerLinkActive="active" class="nav-item">
         <span class="nav-icon">🛡️</span>
-        <span>Actor Provisioning</span>
+        <span>Users</span>
       </a>
     }
   </nav>

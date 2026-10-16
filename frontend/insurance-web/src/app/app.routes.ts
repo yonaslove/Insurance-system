@@ -42,35 +42,35 @@ export const routes: Routes = [
         pathMatch: 'full', 
         redirectTo: 'dashboard' 
       },
-      // Admin & Executive Dashboard
+      // Dashboard
       { 
         path: 'dashboard', 
         component: DashboardComponent, 
-        title: 'Executive Dashboard - InsurEdge',
+        title: 'Dashboard - InsurEdge',
         canActivate: [roleGuard],
         data: { roles: ['ADMIN', 'READ_ONLY'] }
       },
-      // Customer Self-Service Portal
+      // Customer Portal
       { 
         path: 'portal', 
         component: CustomerPortalComponent, 
-        title: 'My Insurance Portal - InsurEdge',
+        title: 'Portal - InsurEdge',
         canActivate: [roleGuard],
         data: { roles: ['CUSTOMER', 'ADMIN'] }
       },
-      // Admin Actor & User Provisioning
+      // User Management
       { 
         path: 'admin/users', 
         component: UserManagementComponent, 
-        title: 'Actor Provisioning - InsurEdge',
+        title: 'Users - InsurEdge',
         canActivate: [roleGuard],
         data: { roles: ['ADMIN'] }
       },
-      // Customer Service & Onboarding
+      // Customers
       { 
         path: 'customers', 
         component: CustomerListComponent, 
-        title: 'Customer Directory - InsurEdge',
+        title: 'Customers - InsurEdge',
         canActivate: [roleGuard],
         data: { roles: ['ADMIN', 'CUSTOMER_SERVICE'] }
       },
@@ -81,26 +81,26 @@ export const routes: Routes = [
         canActivate: [roleGuard],
         data: { roles: ['ADMIN', 'CUSTOMER_SERVICE'] }
       },
-      // Underwriter Product Catalog
+      // Products
       { 
         path: 'products', 
         component: ProductListComponent, 
-        title: 'Product Catalog - InsurEdge',
+        title: 'Products - InsurEdge',
         canActivate: [roleGuard],
         data: { roles: ['ADMIN', 'UNDERWRITER'] }
       },
       { 
         path: 'products/new', 
         component: ProductCreateComponent, 
-        title: 'Configure Product - InsurEdge',
+        title: 'New Product - InsurEdge',
         canActivate: [roleGuard],
         data: { roles: ['ADMIN', 'UNDERWRITER'] }
       },
-      // Underwriter Policy Workbench
+      // Policies
       { 
         path: 'policies', 
         component: PolicyListComponent, 
-        title: 'Policy Workbench - InsurEdge',
+        title: 'Policies - InsurEdge',
         canActivate: [roleGuard],
         data: { roles: ['ADMIN', 'UNDERWRITER'] }
       },
@@ -111,26 +111,26 @@ export const routes: Routes = [
         canActivate: [roleGuard],
         data: { roles: ['ADMIN', 'UNDERWRITER'] }
       },
-      // Claims Officer Adjudication
+      // Claims
       { 
         path: 'claims', 
         component: ClaimListComponent, 
-        title: 'Claims Adjudication - InsurEdge',
+        title: 'Claims - InsurEdge',
         canActivate: [roleGuard],
         data: { roles: ['ADMIN', 'CLAIMS_OFFICER'] }
       },
       { 
         path: 'claims/new', 
         component: ClaimCreateComponent, 
-        title: 'Submit Incident Claim - InsurEdge',
+        title: 'New Claim - InsurEdge',
         canActivate: [roleGuard],
         data: { roles: ['ADMIN', 'CLAIMS_OFFICER', 'CUSTOMER'] }
       },
-      // Finance Officer Treasury & Payments
+      // Payments
       { 
         path: 'payments', 
         component: PaymentListComponent, 
-        title: 'Payments & Treasury - InsurEdge',
+        title: 'Payments - InsurEdge',
         canActivate: [roleGuard],
         data: { roles: ['ADMIN', 'FINANCE_OFFICER'] }
       },
