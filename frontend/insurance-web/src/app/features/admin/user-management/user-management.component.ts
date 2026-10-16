@@ -103,6 +103,34 @@ export class UserManagementComponent implements OnInit {
     return this.authService.getRedirectUrlForRole(role);
   }
 
+  openCreateModal() {
+    this.newUser = {
+      username: '',
+      password: '',
+      email: '',
+      fullName: '',
+      role: 'UNDERWRITER',
+      phone: '',
+      address: ''
+    };
+    this.modalError = '';
+    this.showCreateModal = true;
+  }
+
+  closeCreateModal() {
+    this.showCreateModal = false;
+    this.modalError = '';
+    this.newUser = {
+      username: '',
+      password: '',
+      email: '',
+      fullName: '',
+      role: 'UNDERWRITER',
+      phone: '',
+      address: ''
+    };
+  }
+
   onCreateUser() {
     this.modalError = '';
 
@@ -122,7 +150,7 @@ export class UserManagementComponent implements OnInit {
       next: (created) => {
         this.submitting = false;
         this.showCreateModal = false;
-        this.successMessage = `Actor "${created.fullName}" successfully provisioned with role ${created.role} and database credentials!`;
+        this.successMessage = `User "${created.fullName}" successfully created with role ${created.role}.`;
         this.loadUsers();
         if (created.role === 'CUSTOMER') {
           this.insuranceData.loadAll();

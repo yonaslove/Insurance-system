@@ -7,7 +7,7 @@
       <p>Manage system users, staff roles, and policyholder accounts.</p>
     </div>
 
-    <button type="button" class="btn-create-user" (click)="showCreateModal = true">
+    <button type="button" class="btn-create-user" (click)="openCreateModal()">
       ➕ Add User
     </button>
   </div>
@@ -160,15 +160,19 @@
       <div class="modal-window">
         <div class="modal-header">
           <h2>Add New User</h2>
-          <button type="button" class="btn-close-modal" (click)="showCreateModal = false">&times;</button>
+          <button type="button" class="btn-close-modal" (click)="closeCreateModal()">&times;</button>
         </div>
 
         @if (modalError) {
           <div class="alert-modal-error">⚠️ {{ modalError }}</div>
         }
 
-        <form (ngSubmit)="onCreateUser()" class="modal-form">
+        <form (ngSubmit)="onCreateUser()" class="modal-form" autocomplete="off">
           
+          <!-- Hidden inputs to consume browser password autofill -->
+          <input type="text" name="fake_user" style="position: absolute; top: -9999px; left: -9999px; opacity: 0; pointer-events: none;" tabindex="-1" autocomplete="off" />
+          <input type="password" name="fake_pass" style="position: absolute; top: -9999px; left: -9999px; opacity: 0; pointer-events: none;" tabindex="-1" autocomplete="new-password" />
+
           <div class="form-group">
             <label for="actorRole">User Role *</label>
             <select 
@@ -191,10 +195,11 @@
               <label for="fullName">Full Name *</label>
               <input 
                 id="fullName" 
-                name="fullName" 
+                name="new_fullName" 
                 type="text" 
                 [(ngModel)]="newUser.fullName" 
                 required 
+                autocomplete="off"
                 class="form-control" />
             </div>
 
@@ -202,10 +207,11 @@
               <label for="userEmail">Email Address *</label>
               <input 
                 id="userEmail" 
-                name="userEmail" 
+                name="new_userEmail" 
                 type="email" 
                 [(ngModel)]="newUser.email" 
                 required 
+                autocomplete="off"
                 class="form-control" />
             </div>
           </div>
@@ -215,21 +221,27 @@
               <label for="userUsername">Login Username *</label>
               <input 
                 id="userUsername" 
-                name="userUsername" 
+                name="new_account_username" 
                 type="text" 
                 [(ngModel)]="newUser.username" 
                 required 
+                autocomplete="off"
+                readonly
+                onfocus="this.removeAttribute('readonly');"
                 class="form-control" />
             </div>
 
             <div class="form-group">
-              <label for="userPassword">Database Password *</label>
+              <label for="userPassword">Password *</label>
               <input 
                 id="userPassword" 
-                name="userPassword" 
+                name="new_account_password" 
                 type="password" 
                 [(ngModel)]="newUser.password" 
                 required 
+                autocomplete="new-password"
+                readonly
+                onfocus="this.removeAttribute('readonly');"
                 class="form-control" />
             </div>
           </div>
@@ -243,6 +255,7 @@
                   name="custPhone" 
                   type="text" 
                   [(ngModel)]="newUser.phone" 
+                  autocomplete="off"
                   class="form-control" />
               </div>
 
@@ -253,13 +266,14 @@
                   name="custAddress" 
                   type="text" 
                   [(ngModel)]="newUser.address" 
+                  autocomplete="off"
                   class="form-control" />
               </div>
             </div>
           }
 
           <div class="modal-footer">
-            <button type="button" class="btn-cancel" (click)="showCreateModal = false">Cancel</button>
+            <button type="button" class="btn-cancel" (click)="closeCreateModal()">Cancel</button>
             <button type="submit" class="btn-submit-user" [disabled]="submitting">
               @if (submitting) {
                 <span>Saving...</span>
