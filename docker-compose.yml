@@ -24,13 +24,16 @@ services:
     container_name: insurance-keycloak
     command: start-dev --import-realm
     environment:
-      JAVA_OPTS_KC_HEAP: "-Xms128m -Xmx384m"
+      JAVA_OPTS_KC_HEAP: "-Xms256m -Xmx512m"
       KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN:-admin}
       KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin}
       KC_DB: postgres
       KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak_db
       KC_DB_USERNAME: ${POSTGRES_USER:-insurance_user}
       KC_DB_PASSWORD: ${POSTGRES_PASSWORD:-insurance_password}
+      KC_DB_POOL_INITIAL_SIZE: 5
+      KC_DB_POOL_MIN_SIZE: 5
+      KC_DB_POOL_MAX_SIZE: 20
       KC_HEALTH_ENABLED: "true"
     ports:
       - "8180:8080"
