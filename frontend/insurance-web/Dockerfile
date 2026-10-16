@@ -2,8 +2,11 @@
 FROM node:20-alpine AS build
 WORKDIR /app
 
-COPY package.json ./
-RUN npm install
+ENV CI=true
+ENV NG_CLI_ANALYTICS=false
+
+COPY package.json package-lock.json ./
+RUN npm ci --prefer-offline --no-audit
 
 COPY . ./
 RUN npm run build

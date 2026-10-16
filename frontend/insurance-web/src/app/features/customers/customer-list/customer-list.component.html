@@ -88,7 +88,7 @@
             </tr>
           </thead>
           <tbody>
-            @for (cust of filteredCustomers(); track cust.id) {
+            @for (cust of paginatedCustomers(); track cust.id) {
               <tr [class.highlight-row]="cust.status === 'PENDING_APPROVAL'">
                 <td>
                   <strong>{{ cust.customerNumber }}</strong>
@@ -158,6 +158,15 @@
           </tbody>
         </table>
       </div>
+
+      <app-pagination
+        [currentPage]="currentPage()"
+        [totalItems]="filteredCustomers().length"
+        [pageSize]="pageSize()"
+        [pageSizeOptions]="[5, 10, 20, 50]"
+        (pageChange)="onPageChange($event)"
+        (pageSizeChange)="onPageSizeChange($event)">
+      </app-pagination>
     }
   </app-card>
 

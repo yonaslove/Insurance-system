@@ -1,0 +1,62 @@
+<div class="pagination-container" *ngIf="totalItems > 0">
+  <div class="pagination-info">
+    <span>Showing <strong>{{ startItem }}</strong> to <strong>{{ endItem }}</strong> of <strong>{{ totalItems }}</strong> entries</span>
+    
+    <div class="page-size-selector">
+      <label for="pageSizeSelect">Per page:</label>
+      <select id="pageSizeSelect" [value]="pageSize" (change)="onSizeChange($event)">
+        <option *ngFor="let opt of pageSizeOptions" [value]="opt">{{ opt }}</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="pagination-controls" *ngIf="totalPages > 1">
+    <button 
+      type="button" 
+      class="page-btn nav-btn" 
+      [disabled]="currentPage === 1" 
+      (click)="goToPage(1)" 
+      title="First Page">
+      &laquo;
+    </button>
+    <button 
+      type="button" 
+      class="page-btn nav-btn" 
+      [disabled]="currentPage === 1" 
+      (click)="previous()" 
+      title="Previous Page">
+      &lsaquo; Prev
+    </button>
+
+    <div class="page-numbers">
+      <ng-container *ngFor="let p of visiblePages">
+        <button 
+          *ngIf="p !== '...'" 
+          type="button" 
+          class="page-btn num-btn" 
+          [class.active]="p === currentPage" 
+          (click)="goToPage(p)">
+          {{ p }}
+        </button>
+        <span *ngIf="p === '...'" class="page-ellipsis">&hellip;</span>
+      </ng-container>
+    </div>
+
+    <button 
+      type="button" 
+      class="page-btn nav-btn" 
+      [disabled]="currentPage === totalPages" 
+      (click)="next()" 
+      title="Next Page">
+      Next &rsaquo;
+    </button>
+    <button 
+      type="button" 
+      class="page-btn nav-btn" 
+      [disabled]="currentPage === totalPages" 
+      (click)="goToPage(totalPages)" 
+      title="Last Page">
+      &raquo;
+    </button>
+  </div>
+</div>

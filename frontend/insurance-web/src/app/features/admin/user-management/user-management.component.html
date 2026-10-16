@@ -116,7 +116,7 @@
         </tr>
       </thead>
       <tbody>
-        @for (user of filteredUsers; track user.id) {
+        @for (user of paginatedUsers; track user.id) {
           <tr>
             <td>
               <div class="user-cell">
@@ -144,6 +144,15 @@
       </tbody>
     </table>
   </div>
+
+  <app-pagination
+    [currentPage]="currentPage"
+    [totalItems]="users.length"
+    [pageSize]="pageSize"
+    [pageSizeOptions]="[5, 10, 20, 50]"
+    (pageChange)="onPageChange($event)"
+    (pageSizeChange)="onPageSizeChange($event)">
+  </app-pagination>
 
   <!-- Provision Modal -->
   @if (showCreateModal) {

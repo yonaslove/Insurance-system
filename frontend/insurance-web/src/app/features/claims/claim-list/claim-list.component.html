@@ -26,11 +26,55 @@
   }
 
   <app-card [noPadding]="true">
-    @if (claims().length === 0) {
+    <div class="filter-bar" *ngIf="dataService.claims().length > 0">
+      <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input
+          type="text"
+          placeholder="Filter by claim number, policy, description, or status..."
+          [value]="searchTerm()"
+          (input)="onSearch($event)">
+      </div>
+      <div class="status-filters">
+        <button 
+          type="button" 
+          class="filter-pill" 
+          [class.active]="selectedStatusFilter() === 'ALL'" 
+          (click)="setStatusFilter('ALL')">
+          All ({{ dataService.claims().length }})
+        </button>
+        <button 
+          type="button" 
+          class="filter-pill pill-pending" 
+          [class.active]="selectedStatusFilter() === 'SUBMITTED'" 
+          (click)="setStatusFilter('SUBMITTED')">
+          Submitted
+        </button>
+        <button 
+          type="button" 
+          class="filter-pill pill-approved" 
+          [class.active]="selectedStatusFilter() === 'APPROVED'" 
+          (click)="setStatusFilter('APPROVED')">
+          Approved
+        </button>
+        <button 
+          type="button" 
+          class="filter-pill pill-rejected" 
+          [class.active]="selectedStatusFilter() === 'REJECTED'" 
+          (click)="setStatusFilter('REJECTED')">
+          Rejected
+        </button>
+      </div>
+      <div class="filter-count">
+        Showing <strong>{{ filteredClaims().length }}</strong> claims
+      </div>
+    </div>
+
+    @if (filteredClaims().length === 0) {
       <app-empty-state
-        title="No incident claims"
-        message="No insurance claims have been registered in the system.">
-        <app-button variant="primary" routerLink="/claims/new">Submit First Claim</app-button>
+        title="No incident claims found"
+        message="No claims match your current filter criteria.">
+        <app-button variant="secondary" (btnClick)="resetFilter()">Reset Filter</app-button>
       </app-empty-state>
     } @else {
       <div class="table-responsive">
@@ -47,7 +91,7 @@
             </tr>
           </thead>
           <tbody>
-            @for (c of claims(); track c.id) {
+            @for (c of paginatedClaims(); track c.id) {
               <tr [class.highlight-pending]="c.status === 'SUBMITTED' || c.status === 'UNDER_REVIEW'">
                 <td>
                   <strong>{{ c.claimNumber }}</strong>
@@ -89,6 +133,15 @@
           </tbody>
         </table>
       </div>
+
+      <app-pagination
+        [currentPage]="currentPage()"
+        [totalItems]="filteredClaims().length"
+        [pageSize]="pageSize()"
+        [pageSizeOptions]="[5, 10, 20, 50]"
+        (pageChange)="onPageChange($event)"
+        (pageSizeChange)="onPageSizeChange($event)">
+      </app-pagination>
     }
   </app-card>
 

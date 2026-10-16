@@ -287,3 +287,93 @@
 .btn-approve-claim:hover {
   background: #15803d;
 }
+
+.filter-bar {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--color-border, #e2e8f0);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  background-color: #FFFFFF;
+  flex-wrap: wrap;
+}
+
+.search-box {
+  position: relative;
+  width: 320px;
+}
+
+.search-icon {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 13px;
+  opacity: 0.5;
+}
+
+.search-box input {
+  width: 100%;
+  height: 38px;
+  padding: 0 1rem 0 2.25rem;
+  border: 1px solid var(--color-border, #cbd5e1);
+  border-radius: var(--radius-md, 6px);
+  font-size: 13.5px;
+  background: var(--color-bg-base, #f8fafc);
+  color: var(--color-text-main, #0f172a);
+  outline: none;
+}
+
+.search-box input:focus {
+  border-color: var(--color-primary, #2563eb);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.status-filters {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.filter-pill {
+  padding: 0.35rem 0.85rem;
+  border-radius: 9999px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #475569;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.filter-pill:hover {
+  background: #f1f5f9;
+}
+
+.filter-pill.active {
+  background: #2563eb;
+  color: #ffffff;
+  border-color: #2563eb;
+}
+
+.filter-pill.pill-pending.active {
+  background: #d97706;
+  border-color: #d97706;
+}
+
+.filter-pill.pill-approved.active {
+  background: #16a34a;
+  border-color: #16a34a;
+}
+
+.filter-pill.pill-rejected.active {
+  background: #dc2626;
+  border-color: #dc2626;
+}
+
+.filter-count {
+  font-size: 13px;
+  color: var(--color-text-secondary, #64748b);
+}

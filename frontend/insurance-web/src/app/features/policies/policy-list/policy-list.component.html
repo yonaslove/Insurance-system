@@ -10,11 +10,25 @@
   </div>
 
   <app-card [noPadding]="true">
-    @if (policies().length === 0) {
+    <div class="filter-bar" *ngIf="dataService.policies().length > 0">
+      <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input
+          type="text"
+          placeholder="Filter by policy number, customer, product, or status..."
+          [value]="searchTerm()"
+          (input)="onSearch($event)">
+      </div>
+      <div class="filter-count">
+        Showing <strong>{{ filteredPolicies().length }}</strong> policy records
+      </div>
+    </div>
+
+    @if (filteredPolicies().length === 0) {
       <app-empty-state
-        title="No policies bound"
-        message="There are no active or pending policies in the database.">
-        <app-button variant="primary" routerLink="/policies/new">Issue First Policy</app-button>
+        title="No policies found"
+        message="No policy records match your search criteria.">
+        <app-button variant="secondary" (btnClick)="resetFilter()">Reset Filter</app-button>
       </app-empty-state>
     } @else {
       <div class="table-responsive">
@@ -31,7 +45,7 @@
             </tr>
           </thead>
           <tbody>
-            @for (pol of policies(); track pol.id) {
+            @for (pol of paginatedPolicies(); track pol.id) {
               <tr>
                 <td><strong>{{ pol.policyNumber }}</strong></td>
                 <td>{{ pol.customerName || pol.customerId }}</td>
@@ -49,6 +63,15 @@
           </tbody>
         </table>
       </div>
+
+      <app-pagination
+        [currentPage]="currentPage()"
+        [totalItems]="filteredPolicies().length"
+        [pageSize]="pageSize()"
+        [pageSizeOptions]="[5, 10, 20, 50]"
+        (pageChange)="onPageChange($event)"
+        (pageSizeChange)="onPageSizeChange($event)">
+      </app-pagination>
     }
   </app-card>
 </div>

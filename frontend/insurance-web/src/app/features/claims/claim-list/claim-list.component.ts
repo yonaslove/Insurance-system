@@ -1,4 +1,4 @@
-import { Component, OnInit, computed, inject } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -8,18 +8,22 @@ import { CardComponent } from '../../../shared/components/card/card.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { BadgeComponent } from '../../../shared/components/badge/badge.component';
 import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
+import { PaginationComponent } from '../../../shared/components/pagination/pagination.component';
 
 @Component({
   selector: 'app-claim-list',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, CardComponent, ButtonComponent, BadgeComponent, EmptyStateComponent],
+  imports: [CommonModule, RouterModule, FormsModule, CardComponent, ButtonComponent, BadgeComponent, EmptyStateComponent, PaginationComponent],
   templateUrl: './claim-list.component.html',
   styleUrl: './claim-list.component.css'
 })
 export class ClaimListComponent implements OnInit {
   public dataService = inject(InsuranceDataService);
 
-  claims = computed(() => this.dataService.claims());
+  searchTerm = signal('');
+  selectedStatusFilter = signal<string>('ALL');
+  currentPage = signal(1);
+  pageSize = signal(10);
 
   ngOnInit(): void {
     this.refresh();
@@ -28,6 +32,59 @@ export class ClaimListComponent implements OnInit {
   refresh(): void {
     this.dataService.loadClaims().subscribe({ error: () => {} });
     this.dataService.loadPolicies().subscribe({ error: () => {} });
+  }
+
+  filteredClaims = computed(() => {
+    const term = this.searchTerm().toLowerCase().trim();
+    const status = this.selectedStatusFilter();
+    let all = this.dataService.claims();
+
+    if (status !== 'ALL') {
+      all = all.filter(c => c.status === status);
+    }
+
+    if (!term) return all;
+
+    return all.filter(c =>
+      (c.claimNumber && c.claimNumber.toLowerCase().includes(term)) ||
+      (c.policyNumber && c.policyNumber.toLowerCase().includes(term)) ||
+      (c.description && c.description.toLowerCase().includes(term)) ||
+      (c.status && c.status.toLowerCase().includes(term))
+    );
+  });
+
+  paginatedClaims = computed(() => {
+    const items = this.filteredClaims();
+    const page = this.currentPage();
+    const size = this.pageSize();
+    const start = (page - 1) * size;
+    return items.slice(start, start + size);
+  });
+
+  onSearch(event: Event) {
+    const input = event.target as HTMLInputElement;
+    this.searchTerm.set(input.value);
+    this.currentPage.set(1);
+  }
+
+  setStatusFilter(status: string) {
+    this.selectedStatusFilter.set(status);
+    this.currentPage.set(1);
+  }
+
+  resetFilter() {
+    this.searchTerm.set('');
+    this.selectedStatusFilter.set('ALL');
+    this.currentPage.set(1);
+  }
+
+  onPageChange(page: number) {
+    this.currentPage.set(page);
+  }
+
+  onPageSizeChange(size: number) {
+    this.pageSize.set(size);
+    this.currentPage.set(1);
   }
 
   selectedClaim: Claim | null = null;

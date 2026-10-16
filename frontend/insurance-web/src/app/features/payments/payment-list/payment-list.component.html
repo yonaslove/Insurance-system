@@ -10,11 +10,25 @@
   </div>
 
   <app-card [noPadding]="true">
-    @if (payments().length === 0) {
+    <div class="filter-bar" *ngIf="dataService.payments().length > 0">
+      <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input
+          type="text"
+          placeholder="Filter by receipt ref, policy ID, payment method, or status..."
+          [value]="searchTerm()"
+          (input)="onSearch($event)">
+      </div>
+      <div class="filter-count">
+        Showing <strong>{{ filteredPayments().length }}</strong> payment records
+      </div>
+    </div>
+
+    @if (filteredPayments().length === 0) {
       <app-empty-state
-        title="No payment records"
-        message="No payment transactions are recorded in the ledger.">
-        <app-button variant="primary" routerLink="/payments/new">Record First Payment</app-button>
+        title="No payment records found"
+        message="No payment transactions match your search criteria.">
+        <app-button variant="secondary" (btnClick)="resetFilter()">Reset Filter</app-button>
       </app-empty-state>
     } @else {
       <div class="table-responsive">
@@ -30,7 +44,7 @@
             </tr>
           </thead>
           <tbody>
-            @for (p of payments(); track p.id) {
+            @for (p of paginatedPayments(); track p.id) {
               <tr>
                 <td><strong>{{ p.paymentReference }}</strong></td>
                 <td>{{ p.policyId }}</td>
@@ -45,6 +59,15 @@
           </tbody>
         </table>
       </div>
+
+      <app-pagination
+        [currentPage]="currentPage()"
+        [totalItems]="filteredPayments().length"
+        [pageSize]="pageSize()"
+        [pageSizeOptions]="[5, 10, 20, 50]"
+        (pageChange)="onPageChange($event)"
+        (pageSizeChange)="onPageSizeChange($event)">
+      </app-pagination>
     }
   </app-card>
 </div>

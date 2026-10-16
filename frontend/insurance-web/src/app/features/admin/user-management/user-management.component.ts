@@ -6,10 +6,12 @@ import { AuthService } from '../../../core/services/auth.service';
 import { InsuranceDataService } from '../../../core/services/insurance-data.service';
 import { AdminCreateUserRequest, UserAccount, UserRole } from '../../../core/models/user.model';
 
+import { PaginationComponent } from '../../../shared/components/pagination/pagination.component';
+
 @Component({
   selector: 'app-user-management',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule, PaginationComponent],
   templateUrl: './user-management.component.html',
   styleUrl: './user-management.component.css'
 })
@@ -20,6 +22,8 @@ export class UserManagementComponent implements OnInit {
   users: UserAccount[] = [];
   allUsers: UserAccount[] = [];
   selectedRoleFilter: string = 'ALL';
+  currentPage = 1;
+  pageSize = 10;
   showCreateModal = false;
   submitting = false;
   loading = false;
@@ -59,15 +63,31 @@ export class UserManagementComponent implements OnInit {
 
   filterByRole(role: string) {
     this.selectedRoleFilter = role;
+    this.currentPage = 1;
     this.loadUsers(role);
   }
 
   refreshData() {
+    this.currentPage = 1;
     this.loadUsers(this.selectedRoleFilter);
   }
 
   get filteredUsers(): UserAccount[] {
     return this.users;
+  }
+
+  get paginatedUsers(): UserAccount[] {
+    const start = (this.currentPage - 1) * this.pageSize;
+    return this.users.slice(start, start + this.pageSize);
+  }
+
+  onPageChange(page: number) {
+    this.currentPage = page;
+  }
+
+  onPageSizeChange(size: number) {
+    this.pageSize = size;
+    this.currentPage = 1;
   }
 
   getCountForRole(role: string): number {

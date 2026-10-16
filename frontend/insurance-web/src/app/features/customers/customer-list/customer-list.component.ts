@@ -9,10 +9,12 @@ import { ButtonComponent } from '../../../shared/components/button/button.compon
 import { BadgeComponent } from '../../../shared/components/badge/badge.component';
 import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
 
+import { PaginationComponent } from '../../../shared/components/pagination/pagination.component';
+
 @Component({
   selector: 'app-customer-list',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, CardComponent, ButtonComponent, BadgeComponent, EmptyStateComponent],
+  imports: [CommonModule, RouterModule, FormsModule, CardComponent, ButtonComponent, BadgeComponent, EmptyStateComponent, PaginationComponent],
   templateUrl: './customer-list.component.html',
   styleUrl: './customer-list.component.css'
 })
@@ -21,6 +23,8 @@ export class CustomerListComponent implements OnInit {
 
   searchTerm = signal('');
   selectedStatusTab = signal<'ALL' | 'PENDING_APPROVAL' | 'ACTIVE' | 'REJECTED'>('ALL');
+  currentPage = signal(1);
+  pageSize = signal(10);
   
   selectedCustomer: Customer | null = null;
   rejectionReason = '';
@@ -59,20 +63,40 @@ export class CustomerListComponent implements OnInit {
     );
   });
 
+  paginatedCustomers = computed(() => {
+    const items = this.filteredCustomers();
+    const page = this.currentPage();
+    const size = this.pageSize();
+    const start = (page - 1) * size;
+    return items.slice(start, start + size);
+  });
+
   onSearch(event: Event) {
     const input = event.target as HTMLInputElement;
     this.searchTerm.set(input.value);
+    this.currentPage.set(1);
   }
 
   setTab(tab: 'ALL' | 'PENDING_APPROVAL' | 'ACTIVE' | 'REJECTED') {
     this.selectedStatusTab.set(tab);
+    this.currentPage.set(1);
     this.loadCustomers();
   }
 
   resetFilter() {
     this.searchTerm.set('');
     this.selectedStatusTab.set('ALL');
+    this.currentPage.set(1);
     this.loadCustomers();
+  }
+
+  onPageChange(page: number) {
+    this.currentPage.set(page);
+  }
+
+  onPageSizeChange(size: number) {
+    this.pageSize.set(size);
+    this.currentPage.set(1);
   }
 
   openKycReview(customer: Customer) {
